@@ -1,0 +1,17 @@
+version: "0.1"
+
+agent:
+  name: "inbox-groomer"
+  version: "1.0.0"
+  description: "Grooms email inbox every morning"
+
+activation:
+  mode: "scheduled"
+  schedule: "0 9 * * MON-FRI"
+
+credentials:
+  required:
+    - name: EMAIL_IMAP_PASSWORD
+      description: "IMAP password for email access"
+    - name: EMAIL_ADDRESS
+      description: "Email address to groom"
