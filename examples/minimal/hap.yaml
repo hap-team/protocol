@@ -1,0 +1,6 @@
+version: "0.1"
+
+agent:
+  name: "hello-world"
+  version: "1.0.0"
+  description: "Returns a greeting — minimal HAP agent"
