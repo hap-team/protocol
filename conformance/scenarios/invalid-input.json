@@ -1,0 +1,19 @@
+{
+  "task": {
+    "type": "task",
+    "protocol_version": "0.2",
+    "task_id": "issue-43",
+    "run_id": "run-invalid",
+    "operation": "echo",
+    "input": {},
+    "context": {}
+  },
+  "result": {
+    "type": "result",
+    "task_id": "issue-43",
+    "run_id": "run-invalid",
+    "status": "failed",
+    "outcome": "invalid_input",
+    "error": {"code": "invalid_input", "message": "message is required", "retryable": false}
+  }
+}

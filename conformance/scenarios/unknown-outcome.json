@@ -1,0 +1,12 @@
+{
+  "task": {
+    "type": "task",
+    "protocol_version": "0.2",
+    "task_id": "issue-45",
+    "run_id": "run-lost",
+    "operation": "disconnect",
+    "input": {},
+    "context": {}
+  },
+  "unknown_outcome": true
+}

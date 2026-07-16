@@ -1,0 +1,19 @@
+{
+  "task": {
+    "type": "task",
+    "protocol_version": "0.2",
+    "task_id": "issue-44",
+    "run_id": "run-cancel",
+    "operation": "wait",
+    "input": {},
+    "context": {}
+  },
+  "result": {
+    "type": "result",
+    "task_id": "issue-44",
+    "run_id": "run-cancel",
+    "status": "cancelled",
+    "outcome": "cancelled",
+    "error": {"code": "cancelled", "message": "cancelled by caller", "retryable": false}
+  }
+}
