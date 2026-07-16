@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://humanagentprotocol.com/schemas/0.2/hap-agent.schema.json",
+  "title": "HAP 0.2 Agent Descriptor",
+  "type": "object",
+  "required": ["hap", "agent", "interfaces"],
+  "properties": {
+    "hap": { "const": "0.2" },
+    "agent": { "$ref": "#/$defs/agent" },
+    "contracts": { "$ref": "#/$defs/contracts" },
+    "capabilities": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/capability" }
+    },
+    "credentials": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/credential" }
+    },
+    "lifecycle": { "$ref": "#/$defs/lifecycle" },
+    "interfaces": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/interface" }
+    }
+  },
+  "patternProperties": {
+    "^x-[a-z0-9][a-z0-9.-]*$": true
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "agent": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "$ref": "common.schema.json#/$defs/identifier" },
+        "version": { "$ref": "common.schema.json#/$defs/semanticVersion" },
+        "description": { "type": "string", "minLength": 1 },
+        "author": { "type": "string", "minLength": 1 },
+        "license": { "type": "string", "minLength": 1 },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        }
+      },
+      "patternProperties": {
+        "^x-[a-z0-9][a-z0-9.-]*$": true
+      },
+      "additionalProperties": false
+    },
+    "contract": {
+      "type": "object",
+      "required": ["schema"],
+      "properties": {
+        "schema": { "type": "string", "format": "uri-reference", "minLength": 1 }
+      },
+      "patternProperties": {
+        "^x-[a-z0-9][a-z0-9.-]*$": true
+      },
+      "additionalProperties": false
+    },
+    "contracts": {
+      "type": "object",
+      "properties": {
+        "task": { "$ref": "#/$defs/contract" },
+        "result": { "$ref": "#/$defs/contract" }
+      },
+      "patternProperties": {
+        "^x-[a-z0-9][a-z0-9.-]*$": true
+      },
+      "additionalProperties": false
+    },
+    "capability": {
+      "type": "object",
+      "required": ["id", "description"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "description": { "type": "string", "minLength": 1 },
+        "operations": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/identifier" },
+          "uniqueItems": true
+        }
+      },
+      "patternProperties": {
+        "^x-[a-z0-9][a-z0-9.-]*$": true
+      },
+      "additionalProperties": false
+    },
+    "credential": {
+      "type": "object",
+      "required": ["id", "required", "methods"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "required": { "type": "boolean" },
+        "methods": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": ["bearer", "basic", "oauth2_client_credentials", "mtls", "workload_identity"]
+          }
+        },
+        "description": { "type": "string", "minLength": 1 }
+      },
+      "patternProperties": {
+        "^x-[a-z0-9][a-z0-9.-]*$": true
+      },
+      "additionalProperties": false
+    },
+    "lifecycle": {
+      "type": "object",
+      "properties": {
+        "startup_timeout_ms": { "type": "integer", "minimum": 1 },
+        "health": { "enum": ["supported", "unsupported"] },
+        "cancellation": { "enum": ["supported", "best_effort", "unsupported"] },
+        "graceful_shutdown": { "enum": ["supported", "unsupported"] },
+        "max_concurrent_runs": { "type": "integer", "minimum": 1 }
+      },
+      "patternProperties": {
+        "^x-[a-z0-9][a-z0-9.-]*$": true
+      },
+      "additionalProperties": false
+    },
+    "interfaceBase": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "type": { "enum": ["process", "http", "websocket", "a2a"] },
+        "credentials": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/identifier" },
+          "uniqueItems": true
+        }
+      },
+      "patternProperties": {
+        "^x-[a-z0-9][a-z0-9.-]*$": true
+      }
+    },
+    "processInterface": {
+      "type": "object",
+      "required": ["id", "type", "protocol", "command"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "type": { "const": "process" },
+        "protocol": { "const": "jsonl" },
+        "command": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "credentials": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/identifier" },
+          "uniqueItems": true
+        }
+      },
+      "patternProperties": {
+        "^x-[a-z0-9][a-z0-9.-]*$": true
+      },
+      "additionalProperties": false
+    },
+    "httpInterface": {
+      "type": "object",
+      "required": ["id", "type", "endpoint"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "type": { "const": "http" },
+        "endpoint": { "type": "string", "format": "uri", "pattern": "^https://" },
+        "events": {
+          "enum": ["polling", "streaming", "both"],
+          "default": "polling"
+        },
+        "credentials": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/identifier" },
+          "uniqueItems": true
+        }
+      },
+      "patternProperties": {
+        "^x-[a-z0-9][a-z0-9.-]*$": true
+      },
+      "additionalProperties": false
+    },
+    "websocketInterface": {
+      "type": "object",
+      "required": ["id", "type", "endpoint"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "type": { "const": "websocket" },
+        "endpoint": { "type": "string", "format": "uri", "pattern": "^wss://" },
+        "credentials": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/identifier" },
+          "uniqueItems": true
+        }
+      },
+      "patternProperties": {
+        "^x-[a-z0-9][a-z0-9.-]*$": true
+      },
+      "additionalProperties": false
+    },
+    "a2aInterface": {
+      "type": "object",
+      "required": ["id", "type", "endpoint", "version"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "type": { "const": "a2a" },
+        "endpoint": { "type": "string", "format": "uri", "pattern": "^https://" },
+        "version": { "const": "1.0" },
+        "credentials": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/identifier" },
+          "uniqueItems": true
+        }
+      },
+      "patternProperties": {
+        "^x-[a-z0-9][a-z0-9.-]*$": true
+      },
+      "additionalProperties": false
+    },
+    "interface": {
+      "oneOf": [
+        { "$ref": "#/$defs/processInterface" },
+        { "$ref": "#/$defs/httpInterface" },
+        { "$ref": "#/$defs/websocketInterface" },
+        { "$ref": "#/$defs/a2aInterface" }
+      ]
+    }
+  }
+}
