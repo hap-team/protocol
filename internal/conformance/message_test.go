@@ -28,6 +28,7 @@ func TestMessageFixtures(t *testing.T) {
 		{name: "invalid/numeric-cost.json"},
 		{name: "invalid/cost-without-currency.json"},
 		{name: "invalid/failed-result-without-error.json"},
+		{name: "invalid/result-without-output.json"},
 		{name: "invalid/unknown-result-status.json"},
 		{name: "invalid/task-board-field.json"},
 		{name: "invalid/unknown-core-field.json"},

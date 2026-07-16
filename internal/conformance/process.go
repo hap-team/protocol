@@ -28,7 +28,7 @@ type Result struct {
 	RunID      string         `json:"run_id"`
 	Status     string         `json:"status"`
 	Outcome    string         `json:"outcome"`
-	Output     map[string]any `json:"output,omitempty"`
+	Output     map[string]any `json:"output"`
 	Error      map[string]any `json:"error,omitempty"`
 	Usage      map[string]any `json:"usage,omitempty"`
 	Trace      map[string]any `json:"trace,omitempty"`

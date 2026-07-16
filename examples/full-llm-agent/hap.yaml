@@ -1,88 +1,33 @@
-version: "0.1"
-
+hap: "0.2"
 agent:
-  name: "jira-project-manager"
-  version: "1.2.0"
-  description: "Manages Jira projects — triages issues, assigns work, writes sprint reports"
-  author: "acme-agents"
-  license: "commercial"
-  tags: ["project-management", "jira", "agile"]
-
-mind:
-  default: "claude-sonnet-4-6"
-  supported: ["claude-*", "gpt-4o", "bedrock/*", "ollama/*"]
-  endpoint: null
-
+  name: support-agent
+  version: 2.0.0
+  description: Resolves support requests using implementation-selected tools.
+  author: HAP Team
+  license: Apache-2.0
+  tags: [support, triage]
+capabilities:
+  - id: resolve-ticket
+    description: Investigates and resolves a support ticket.
+  - id: answer-query
+    description: Answers a support question.
 credentials:
-  required:
-    - name: JIRA_API_TOKEN
-      description: "Jira API token with read/write access"
-    - name: JIRA_BASE_URL
-      description: "Your Jira instance URL"
-    - name: LLM_API_KEY
-      description: "API key for the LLM provider"
-  optional:
-    - name: SLACK_WEBHOOK_URL
-      description: "For sending sprint summaries to Slack"
-    - name: REDIS_URL
-      description: "Redis for agent persistent memory"
-
-instructions:
-  path: "/agent/instructions/"
-  format: "markdown"
-  hot_reload: true
-  supported:
-    - "tone_and_style"
-    - "domain_rules"
-    - "forbidden_actions"
-    - "priority_rules"
-  not_supported:
-    - "custom_tool_definitions"
-
-activation:
-  mode: "continuous"
-
+  - id: support-api
+    required: true
+    methods: [bearer, workload_identity]
+    description: Credential for the configured support system.
+lifecycle:
+  health: supported
+  cancellation: best_effort
+  graceful_shutdown: supported
+  max_concurrent_runs: 16
 interfaces:
-  task:
-    format: "json"
-    schema: "schemas/task.json"
-  chat:
-    protocol: "websocket"
-  human_feedback:
-    async: true
-
-a2a:
-  enabled: true
-  capabilities:
-    - name: "review-sprint"
-      input: "json"
-      description: "Send me sprint data, I'll produce a review"
-    - name: "triage-issue"
-      input: "json"
-      description: "Send me a Jira issue, I'll classify and route it"
-  accepts: ["task", "query", "event"]
-
-reporting:
-  default: "stdout"
-  adapters:
-    - name: "datadog"
-      config_env: "DD_API_KEY"
-
-conduct:
-  guardrails:
-    - "Will not delete Jira projects"
-    - "Will not modify user permissions"
-    - "Max 100 API calls per minute"
-  failure_protocol: "report_and_pause"
-
-debug:
-  enabled: true
-  interface: "http"
-  auth: true
-
-cost_estimate:
-  llm_cost_per_task: "$0.05 - $0.50"
-  typical_monthly_llm: "$50 - $200"
-  required_subscriptions:
-    - "Jira (any plan)"
-    - "Slack (optional)"
+  - id: stream
+    type: websocket
+    endpoint: wss://agents.example.com/support
+    credentials: [support-api]
+  - id: a2a
+    type: a2a
+    endpoint: https://agents.example.com/a2a
+    version: "1.0"
+    credentials: [support-api]
