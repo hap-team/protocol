@@ -1,0 +1,44 @@
+hap: "0.2"
+agent:
+  name: researcher
+  version: 2.1.0
+  description: Researches a topic and returns cited findings.
+  author: HAP Team
+  license: Apache-2.0
+  tags: [research, citations]
+contracts:
+  task:
+    schema: ../../../examples/contracts/research-task.json
+  result:
+    schema: ../../../examples/contracts/research-result.json
+capabilities:
+  - id: cited-research
+    description: Produces findings with cited sources.
+credentials:
+  - id: search-api
+    required: true
+    methods: [bearer, workload_identity]
+    description: Credential for the configured search provider.
+lifecycle:
+  startup_timeout_ms: 5000
+  health: supported
+  cancellation: best_effort
+  graceful_shutdown: supported
+  max_concurrent_runs: 4
+interfaces:
+  - id: local
+    type: process
+    protocol: jsonl
+    command: ["./researcher", "serve"]
+  - id: api
+    type: http
+    endpoint: https://agents.example.com/researcher
+    events: both
+    credentials: [search-api]
+  - id: stream
+    type: websocket
+    endpoint: wss://agents.example.com/researcher
+  - id: a2a
+    type: a2a
+    endpoint: https://agents.example.com/a2a
+    version: "1.0"
