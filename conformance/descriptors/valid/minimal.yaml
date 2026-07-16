@@ -1,0 +1,9 @@
+hap: "0.2"
+agent:
+  name: echo-agent
+  version: 1.0.0
+interfaces:
+  - id: local
+    type: process
+    protocol: jsonl
+    command: ["./echo-agent", "serve"]

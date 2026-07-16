@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://humanagentprotocol.com/schemas/0.2/task.schema.json",
+  "title": "HAP 0.2 Task",
+  "type": "object",
+  "required": ["type", "protocol_version", "task_id", "run_id", "operation", "input", "context"],
+  "properties": {
+    "type": { "const": "task" },
+    "protocol_version": { "const": "0.2" },
+    "task_id": { "$ref": "common.schema.json#/$defs/opaqueID" },
+    "run_id": { "$ref": "common.schema.json#/$defs/opaqueID" },
+    "operation": { "$ref": "common.schema.json#/$defs/identifier" },
+    "input": true,
+    "context": true,
+    "deadline": { "type": "string", "format": "date-time" },
+    "trace": { "$ref": "common.schema.json#/$defs/trace" },
+    "extensions": { "$ref": "common.schema.json#/$defs/extensions" }
+  },
+  "additionalProperties": false
+}

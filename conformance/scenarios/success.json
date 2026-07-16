@@ -1,0 +1,25 @@
+{
+  "task": {
+    "type": "task",
+    "protocol_version": "0.2",
+    "task_id": "issue-42",
+    "run_id": "run-success",
+    "operation": "echo",
+    "input": {"message": "hello"},
+    "context": {},
+    "trace": {"traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"}
+  },
+  "result": {
+    "type": "result",
+    "task_id": "issue-42",
+    "run_id": "run-success",
+    "status": "succeeded",
+    "outcome": "completed",
+    "output": {"message": "hello"},
+    "usage": {
+      "measurements": [{"name": "agent.requests", "quantity": 1, "unit": "request"}],
+      "cost": {"amount": "0", "currency": "USD", "source": "agent"}
+    },
+    "trace": {"traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"}
+  }
+}

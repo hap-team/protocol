@@ -1,0 +1,14 @@
+hap: "0.2"
+agent:
+  name: extension-agent
+  version: 1.0.0
+  x-example:
+    publisher: hap-team
+interfaces:
+  - id: api
+    type: http
+    endpoint: https://agents.example.com/extension
+    x-example.timeout-class: interactive
+x-example:
+  nested:
+    preserved: true

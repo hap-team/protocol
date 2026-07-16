@@ -1,0 +1,1 @@
+{"type":"result","task_id":"issue-42","run_id":"run-01","status":"succeeded","outcome":"completed","output":{},"usage":{"measurements":[{"name":"llm.input_tokens","quantity":-1,"unit":"token"}]}}

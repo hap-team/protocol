@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://humanagentprotocol.com/schemas/0.2/handshake.schema.json",
+  "title": "HAP 0.2 Handshake Messages",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["type", "supported_versions", "client"],
+      "properties": {
+        "type": { "const": "handshake" },
+        "supported_versions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "client": { "$ref": "common.schema.json#/$defs/clientIdentity" },
+        "extensions": { "$ref": "common.schema.json#/$defs/extensions" }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["type", "protocol_version", "agent", "max_concurrent_runs"],
+      "properties": {
+        "type": { "const": "handshake_ack" },
+        "protocol_version": { "const": "0.2" },
+        "agent": { "$ref": "common.schema.json#/$defs/clientIdentity" },
+        "max_concurrent_runs": { "type": "integer", "minimum": 1 },
+        "extensions": { "$ref": "common.schema.json#/$defs/extensions" }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

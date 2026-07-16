@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://humanagentprotocol.com/schemas/0.2/message.schema.json",
+  "title": "HAP 0.2 Framed Message",
+  "oneOf": [
+    { "$ref": "handshake.schema.json" },
+    { "$ref": "task.schema.json" },
+    { "$ref": "event.schema.json" },
+    { "$ref": "result.schema.json" },
+    { "$ref": "cancel.schema.json" }
+  ]
+}

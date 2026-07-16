@@ -1,0 +1,1 @@
+{"type":"result","task_id":"issue-42","run_id":"run-03","status":"succeeded","outcome":"completed","output":{},"usage":{"measurements":[{"name":"llm.input_tokens","quantity":1250,"unit":"token","provider":"openai","model":"gpt-example"}],"cost":{"amount":"0.01234","currency":"USD","source":"gateway"}}}

@@ -1,43 +1,33 @@
-# Health Checker -- HAP Example Agent
+# HAP 0.2 health-checker example
 
-A reference HAP agent that monitors URL health. Demonstrates the full HAP event protocol with all mandatory and task events.
+This deterministic reference agent exposes the standard HAP HTTP resources:
 
-## What it does
+- `POST /tasks`
+- `GET /runs/{run_id}`
+- `GET /runs/{run_id}/events`
+- `POST /runs/{run_id}/cancel`
+- `GET /health`
 
-- Reads `URL_TO_CHECK` from environment
-- Checks the URL every 30 seconds via HTTP GET
-- Emits JSONL events to stdout (HAP protocol)
-- Handles SIGTERM gracefully
+It accepts the `check-url` operation with `input.url`, then returns one
+terminal Result with `healthy` or `unhealthy` outcome. Usage records one
+measured HTTP request. Cost is omitted because it is unavailable.
 
-## Events emitted
-
-| Event | When | Fields |
-|-------|------|--------|
-| `agent.started` | On boot | - |
-| `agent.ready` | After initialization | - |
-| `agent.heartbeat` | Every 10s | `status`, `uptime` |
-| `task.started` | Before each check | `task_id`, `detail` |
-| `task.completed` | Check succeeded | `task_id`, `detail` |
-| `task.failed` | Check failed | `task_id`, `detail` |
-| `agent.stopped` | On SIGTERM | - |
-
-## Run with HAP
+Run locally:
 
 ```bash
-# From this directory:
-hap dev
+HAP_LISTEN_ADDR=127.0.0.1:8080 go run .
 ```
 
-## Run standalone
+Validate the descriptor from the protocol repository root:
 
 ```bash
-URL_TO_CHECK=https://example.com go run .
+go run ./cmd/hap-conformance \
+  --schema schemas/0.2/hap-agent.schema.json \
+  --file examples/health-checker/hap.yaml
 ```
 
-## Build container
+Container packaging remains an optional CLI concern:
 
 ```bash
-hap build
-# Or directly:
-docker build -t health-checker:0.1.0 .
+docker build -t health-checker:0.2.0 .
 ```

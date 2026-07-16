@@ -1,36 +1,56 @@
-# HAP — Human Agent Protocol
+# Human Agent Protocol
 
-> An open **draft** standard (v0.1) for describing, publishing, running, and interacting with AI agents. Created by HAP Team, open for community use. Apache-2.0.
+Human Agent Protocol (HAP) 0.2 is an open contract for describing and invoking
+software agents without prescribing how they are implemented.
 
-HAP defines the **public contract** of an AI agent: what it is, what it can do, how to call it, what it needs, what it costs, and how it reports what happened — so humans, apps, and other agents can discover, run, and trust it without reading its source.
+A HAP agent publishes:
 
-HAP is not MCP, A2A, or a safety-control spec:
+- identity and semantic version;
+- one or more process/JSONL, HTTP, WebSocket, or A2A interfaces;
+- optional task and result contracts;
+- optional informational capabilities;
+- logical credential requirements without secret values; and
+- observable lifecycle and cancellation behavior.
 
-| | Answers |
-|---|---|
-| **MCP** | How does an agent reach tools? |
-| **A2A** | How do agents talk to each other? |
-| **ACS** | What controls run at runtime? |
-| **HAP** | How does an agent publish itself so it can be discovered, run, and trusted? |
+HAP does not require an LLM, model provider, SDK, container, orchestrator,
+LiteLLM, prompt format, scheduler, board, or workflow engine. An agent may be
+deterministic, human-backed, LLM-backed, locally executed, or remotely hosted.
 
-## What's here
+## Repository contents
 
-- [`docs/protocol.md`](docs/protocol.md) — the protocol specification (v0.1 draft)
-- [`schemas/hap-manifest.schema.json`](schemas/hap-manifest.schema.json) — JSON Schema for `hap.yaml`
-- [`examples/`](examples/) — reference agent manifests
+- [Protocol specification](docs/protocol.md)
+- [Agent descriptor schema](schemas/0.2/hap-agent.schema.json)
+- [Canonical message schema](schemas/0.2/message.schema.json)
+- [Conformance fixtures](conformance/)
+- [Migration notes](docs/migrating-from-0.1.md)
+- [Release policy](docs/release-policy.md)
 
-## The contract in five layers
+Validate a descriptor offline:
 
-1. **Identity** — name, version, author, license, tags
-2. **Mind** — model family, supported providers, endpoint
-3. **Interfaces** — how input arrives: `task`, `chat`, `human_feedback`
-4. **Capabilities** — what it exposes to other agents (`a2a`) and the instructions it accepts
-5. **Trust** — guardrails, cost estimate, credentials, reporting
+```bash
+go run ./cmd/hap-conformance \
+  --schema schemas/0.2/hap-agent.schema.json \
+  --file examples/minimal/hap.yaml
+```
 
-## Status
+Test a declared interface:
 
-v0.1 draft. The spec will change. Issues and RFC discussions welcome.
+```bash
+go run ./cmd/hap-conformance interface \
+  --descriptor conformance/testagent/hap.yaml \
+  --interface local
+```
 
-## License
+## Related concepts
 
-Apache-2.0.
+- A HAP Agent is independently described and published using this protocol.
+- A HAP Team references agents and gives them team-specific responsibilities.
+- A HAP Flow defines movement between agents, runbooks, boards, APIs, states,
+  and approval gates.
+- A HAP Orchestrator loads Team and Flow configuration, resolves plugins, and
+  executes the flow.
+
+Those related formats are separate specifications. HAP Agent conformance does
+not depend on them.
+
+Apache-2.0 licensed.
