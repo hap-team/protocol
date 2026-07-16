@@ -1,1 +1,1 @@
-{"type":"result","task_id":"issue-42","run_id":"run-04","status":"failed","outcome":"invalid_input","error":{"code":"invalid_input","message":"message is required","retryable":false,"details":{}}}
+{"type":"result","task_id":"issue-42","run_id":"run-04","status":"failed","outcome":"invalid_input","output":{},"error":{"code":"invalid_input","message":"message is required","retryable":false,"details":{}}}

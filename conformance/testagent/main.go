@@ -133,7 +133,8 @@ func handleTask(task map[string]any) map[string]any {
 		return map[string]any{
 			"type": "result", "task_id": task["task_id"], "run_id": task["run_id"],
 			"status": "failed", "outcome": "invalid_input",
-			"error": map[string]any{"code": "invalid_input", "message": "message is required", "retryable": false},
+			"output": map[string]any{},
+			"error":  map[string]any{"code": "invalid_input", "message": "message is required", "retryable": false},
 		}
 	}
 	result := map[string]any{

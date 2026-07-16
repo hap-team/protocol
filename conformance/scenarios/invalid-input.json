@@ -14,6 +14,7 @@
     "run_id": "run-invalid",
     "status": "failed",
     "outcome": "invalid_input",
+    "output": {},
     "error": {"code": "invalid_input", "message": "message is required", "retryable": false}
   }
 }

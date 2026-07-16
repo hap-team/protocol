@@ -3,7 +3,7 @@
   "$id": "https://humanagentprotocol.com/schemas/0.2/result.schema.json",
   "title": "HAP 0.2 Result",
   "type": "object",
-  "required": ["type", "task_id", "run_id", "status", "outcome"],
+  "required": ["type", "task_id", "run_id", "status", "outcome", "output"],
   "properties": {
     "type": { "const": "result" },
     "task_id": { "$ref": "common.schema.json#/$defs/opaqueID" },

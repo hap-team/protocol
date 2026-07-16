@@ -1,17 +1,18 @@
-version: "0.1"
-
+hap: "0.2"
 agent:
-  name: "health-checker"
-  version: "0.1.0"
-  description: "Checks URL health and reports status via HAP events"
-
-credentials:
-  optional:
-    - name: URL_TO_CHECK
-      description: "URL to monitor (defaults to https://example.com when unset)"
-
-activation:
-  mode: "continuous"
-
-reporting:
-  default: "stdout"
+  name: health-checker
+  version: 0.2.0
+  description: Checks URL health through an HTTP interface.
+capabilities:
+  - id: check-url
+    description: Checks whether a URL responds successfully.
+lifecycle:
+  health: supported
+  cancellation: unsupported
+  graceful_shutdown: supported
+  max_concurrent_runs: 8
+interfaces:
+  - id: api
+    type: http
+    endpoint: https://agents.example.com/health-checker
+    events: polling
