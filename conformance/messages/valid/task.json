@@ -1,0 +1,1 @@
+{"type":"task","protocol_version":"0.2","task_id":"issue-42","run_id":"run-01","operation":"echo","input":{"message":"hello"},"context":{},"deadline":"2026-07-16T15:00:00Z","trace":{"traceparent":"00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"}}

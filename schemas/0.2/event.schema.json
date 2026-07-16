@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://humanagentprotocol.com/schemas/0.2/event.schema.json",
+  "title": "HAP 0.2 Event",
+  "type": "object",
+  "required": ["type", "run_id", "sequence", "time", "name", "data"],
+  "properties": {
+    "type": { "const": "event" },
+    "run_id": { "$ref": "common.schema.json#/$defs/opaqueID" },
+    "sequence": { "type": "integer", "minimum": 1 },
+    "time": { "type": "string", "format": "date-time" },
+    "name": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]*$" },
+    "data": true,
+    "extensions": { "$ref": "common.schema.json#/$defs/extensions" }
+  },
+  "additionalProperties": false
+}

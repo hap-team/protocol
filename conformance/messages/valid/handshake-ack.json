@@ -1,0 +1,1 @@
+{"type":"handshake_ack","protocol_version":"0.2","agent":{"name":"echo-agent","version":"1.0.0"},"max_concurrent_runs":1}

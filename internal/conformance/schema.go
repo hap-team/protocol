@@ -31,6 +31,9 @@ var (
 	descriptorSchemaOnce sync.Once
 	descriptorSchema     *jsonschema.Schema
 	descriptorSchemaErr  error
+	messageSchemaOnce    sync.Once
+	messageSchema        *jsonschema.Schema
+	messageSchemaErr     error
 )
 
 // ValidateDescriptor validates a YAML or JSON HAP 0.2 agent descriptor.
@@ -64,6 +67,70 @@ func ValidateDescriptor(data []byte) ([]Violation, error) {
 
 	violations = append(violations, duplicateInterfaceIDViolations(document)...)
 	return violations, nil
+}
+
+// ValidateMessage validates one canonical HAP 0.2 JSON message.
+func ValidateMessage(data []byte) ([]Violation, error) {
+	var document any
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.UseNumber()
+	if err := decoder.Decode(&document); err != nil {
+		return nil, fmt.Errorf("decode message: %w", err)
+	}
+
+	schema, err := loadMessageSchema()
+	if err != nil {
+		return nil, err
+	}
+	if err := schema.Validate(document); err != nil {
+		validationErr, ok := err.(*jsonschema.ValidationError)
+		if !ok {
+			return nil, fmt.Errorf("validate message: %w", err)
+		}
+		var violations []Violation
+		flattenValidationErrors(validationErr, &violations)
+		return violations, nil
+	}
+	return nil, nil
+}
+
+// ValidateCancellationAcknowledgement verifies an acknowledgement belongs to
+// the cancellation request it answers.
+func ValidateCancellationAcknowledgement(request, acknowledgement []byte) ([]Violation, error) {
+	if violations, err := ValidateMessage(request); err != nil || len(violations) != 0 {
+		return violations, err
+	}
+	if violations, err := ValidateMessage(acknowledgement); err != nil || len(violations) != 0 {
+		return violations, err
+	}
+
+	var cancel struct {
+		Type  string `json:"type"`
+		RunID string `json:"run_id"`
+	}
+	var ack struct {
+		Type  string `json:"type"`
+		RunID string `json:"run_id"`
+	}
+	if err := json.Unmarshal(request, &cancel); err != nil {
+		return nil, fmt.Errorf("decode cancellation request: %w", err)
+	}
+	if err := json.Unmarshal(acknowledgement, &ack); err != nil {
+		return nil, fmt.Errorf("decode cancellation acknowledgement: %w", err)
+	}
+	if cancel.Type != "cancel" || ack.Type != "cancel_ack" {
+		return []Violation{{
+			Path:    "type",
+			Message: "expected cancel followed by cancel_ack",
+		}}, nil
+	}
+	if cancel.RunID != ack.RunID {
+		return []Violation{{
+			Path:    "run_id",
+			Message: "cancellation acknowledgement must use the request run_id",
+		}}, nil
+	}
+	return nil, nil
 }
 
 func loadDescriptorSchema() (*jsonschema.Schema, error) {
@@ -100,6 +167,55 @@ func loadDescriptorSchema() (*jsonschema.Schema, error) {
 		return nil, fmt.Errorf("compile descriptor schema: %w", descriptorSchemaErr)
 	}
 	return descriptorSchema, nil
+}
+
+func loadMessageSchema() (*jsonschema.Schema, error) {
+	messageSchemaOnce.Do(func() {
+		compiler, err := newSchemaCompiler()
+		if err != nil {
+			messageSchemaErr = err
+			return
+		}
+		messageSchema, messageSchemaErr = compiler.Compile(
+			"https://humanagentprotocol.com/schemas/0.2/message.schema.json",
+		)
+	})
+	if messageSchemaErr != nil {
+		return nil, fmt.Errorf("compile message schema: %w", messageSchemaErr)
+	}
+	return messageSchema, nil
+}
+
+func newSchemaCompiler() (*jsonschema.Compiler, error) {
+	_, sourceFile, _, ok := runtime.Caller(0)
+	if !ok {
+		return nil, fmt.Errorf("locate conformance package")
+	}
+	schemaDir := filepath.Clean(filepath.Join(filepath.Dir(sourceFile), "..", "..", "schemas", "0.2"))
+
+	compiler := jsonschema.NewCompiler()
+	compiler.Draft = jsonschema.Draft2020
+	compiler.AssertFormat = true
+	for _, name := range []string{
+		"common.schema.json",
+		"hap-agent.schema.json",
+		"task.schema.json",
+		"event.schema.json",
+		"result.schema.json",
+		"cancel.schema.json",
+		"handshake.schema.json",
+		"message.schema.json",
+	} {
+		data, err := os.ReadFile(filepath.Join(schemaDir, name))
+		if err != nil {
+			return nil, fmt.Errorf("read %s: %w", name, err)
+		}
+		url := "https://humanagentprotocol.com/schemas/0.2/" + name
+		if err := compiler.AddResource(url, bytes.NewReader(data)); err != nil {
+			return nil, fmt.Errorf("load %s: %w", name, err)
+		}
+	}
+	return compiler, nil
 }
 
 func flattenValidationErrors(err *jsonschema.ValidationError, violations *[]Violation) {

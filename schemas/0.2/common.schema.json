@@ -17,6 +17,126 @@
     "semanticVersion": {
       "type": "string",
       "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "opaqueID": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "trace": {
+      "type": "object",
+      "required": ["traceparent"],
+      "properties": {
+        "traceparent": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{2}-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$"
+        },
+        "tracestate": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "measurement": {
+      "type": "object",
+      "required": ["name", "quantity", "unit"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.-]*$"
+        },
+        "quantity": {
+          "type": "number",
+          "minimum": 0
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "provider": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "cost": {
+      "type": "object",
+      "required": ["amount", "currency", "source"],
+      "properties": {
+        "amount": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^(provider|gateway|agent|x-[a-z0-9][a-z0-9.-]*)$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "usage": {
+      "type": "object",
+      "properties": {
+        "measurements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/measurement"
+          }
+        },
+        "cost": {
+          "$ref": "#/$defs/cost"
+        }
+      },
+      "additionalProperties": false
+    },
+    "error": {
+      "type": "object",
+      "required": ["code", "message", "retryable"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.-]*$"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "details": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "clientIdentity": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/identifier"
+        },
+        "version": {
+          "$ref": "#/$defs/semanticVersion"
+        }
+      },
+      "additionalProperties": false
     }
   }
 }
