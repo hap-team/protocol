@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://humanagentprotocol.com/schemas/0.2/cancel.schema.json",
+  "title": "HAP 0.2 Cancellation Messages",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["type", "run_id"],
+      "properties": {
+        "type": { "const": "cancel" },
+        "run_id": { "$ref": "common.schema.json#/$defs/opaqueID" },
+        "reason": { "type": "string", "minLength": 1 },
+        "extensions": { "$ref": "common.schema.json#/$defs/extensions" }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["type", "run_id", "accepted", "terminal"],
+      "properties": {
+        "type": { "const": "cancel_ack" },
+        "run_id": { "$ref": "common.schema.json#/$defs/opaqueID" },
+        "accepted": { "type": "boolean" },
+        "terminal": { "type": "boolean" },
+        "extensions": { "$ref": "common.schema.json#/$defs/extensions" }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

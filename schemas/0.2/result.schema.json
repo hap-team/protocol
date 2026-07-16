@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://humanagentprotocol.com/schemas/0.2/result.schema.json",
+  "title": "HAP 0.2 Result",
+  "type": "object",
+  "required": ["type", "task_id", "run_id", "status", "outcome"],
+  "properties": {
+    "type": { "const": "result" },
+    "task_id": { "$ref": "common.schema.json#/$defs/opaqueID" },
+    "run_id": { "$ref": "common.schema.json#/$defs/opaqueID" },
+    "status": { "enum": ["succeeded", "failed", "cancelled"] },
+    "outcome": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]*$" },
+    "output": true,
+    "error": { "$ref": "common.schema.json#/$defs/error" },
+    "usage": { "$ref": "common.schema.json#/$defs/usage" },
+    "trace": { "$ref": "common.schema.json#/$defs/trace" },
+    "extensions": { "$ref": "common.schema.json#/$defs/extensions" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "status": { "const": "failed" } },
+        "required": ["status"]
+      },
+      "then": { "required": ["error"] }
+    }
+  ],
+  "additionalProperties": false
+}
