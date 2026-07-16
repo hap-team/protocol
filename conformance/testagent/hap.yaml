@@ -1,0 +1,25 @@
+hap: "0.2"
+agent:
+  name: conformance-agent
+  version: 0.2.0
+lifecycle:
+  health: supported
+  cancellation: supported
+  graceful_shutdown: supported
+  max_concurrent_runs: 4
+interfaces:
+  - id: local
+    type: process
+    protocol: jsonl
+    command: ["./hap-conformance-testagent", "process"]
+  - id: api
+    type: http
+    endpoint: https://127.0.0.1:8443
+    events: both
+  - id: stream
+    type: websocket
+    endpoint: wss://127.0.0.1:8443/ws
+  - id: a2a
+    type: a2a
+    endpoint: https://127.0.0.1:8443/a2a
+    version: "1.0"

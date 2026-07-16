@@ -23,3 +23,21 @@ func TestRunValidDescriptor(t *testing.T) {
 		t.Fatalf("stdout %q does not contain descriptor identity", got)
 	}
 }
+
+func TestRunInterfaceDescriptor(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	code := run([]string{
+		"interface",
+		"--descriptor", filepath.Join("..", "..", "conformance", "testagent", "hap.yaml"),
+		"--interface", "local",
+	}, &stdout, &stderr)
+
+	if code != 0 {
+		t.Fatalf("run returned %d; stderr: %s", code, stderr.String())
+	}
+	if got := stdout.String(); !strings.Contains(got, "PASS local (process)") {
+		t.Fatalf("stdout %q does not contain interface result", got)
+	}
+}
