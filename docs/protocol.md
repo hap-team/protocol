@@ -1,545 +1,236 @@
-# HAP Protocol Specification
+# HAP Agent Protocol 0.2
 
-Version: 0.1 (draft)
+Status: release candidate specification.
 
----
+## Scope
 
-## 1. Overview
+HAP 0.2 defines an agent descriptor and transport-neutral invocation
+semantics. It answers:
 
-The Human Agent Protocol (HAP) is an open **draft** standard for packaging, distributing, and running autonomous AI agents. It defines:
+- What agent is this?
+- Which invocation interfaces does it expose?
+- Which task and result contracts does it publish?
+- Which logical credentials does it require?
+- What lifecycle and cancellation behavior can callers observe?
+- Which measured usage and actual cost did a run report?
 
-- A **manifest format** (`hap.yaml`) that declares an agent's identity, capabilities, dependencies, and operational parameters.
-- An **event protocol** (JSONL over stdout) that provides a uniform interface for observing agent lifecycle and task execution.
-- A **credentials model** for declaring and injecting secrets and configuration.
-- A **container packaging convention** for producing portable OCI images.
+HAP does not define teams, workflows, runbooks, board state machines,
+scheduling, model selection, prompts, packaging, deployment, or marketplace
+policy.
 
-HAP defines interfaces, not implementations. Any language or runtime can produce a conforming agent. The protocol makes no assumptions about whether an agent uses an LLM, rule-based logic, or any other approach -- only that it speaks the event protocol and ships with a valid manifest.
+## Conformance principles
 
----
+1. Core objects are strict. Unknown unnamespaced fields are invalid.
+2. Extensions use keys matching `x-[a-z0-9][a-z0-9.-]*`.
+3. The public invocation term is `interface`.
+4. Task, Event, Result, cancellation, usage, and trace semantics are the same
+   across every interface.
+5. Cost is measured or unavailable. HAP does not carry estimates.
+6. Credentials are logical requirements. Descriptors never contain values.
 
-## 2. Manifest Format (hap.yaml)
+## Agent descriptor
 
-Every HAP agent must include a `hap.yaml` file at the root of its project directory. The manifest is validated against the JSON Schema at `schemas/hap-manifest.schema.json`.
-
-Two fields are required at the top level: `version` and `agent`. All other sections are optional.
-
-### 2.1 version (required)
-
-The manifest specification version. Currently `"0.1"`.
-
-```yaml
-version: "0.1"
-```
-
-### 2.2 agent (required)
-
-Agent identity metadata. The `name` and `version` fields are required.
-
-| Field         | Type     | Required | Description                                      |
-|---------------|----------|----------|--------------------------------------------------|
-| `name`        | string   | Yes      | Agent name. Must match `^[a-z0-9][a-z0-9-]*$`.  |
-| `version`     | string   | Yes      | Agent version (semver recommended).              |
-| `description` | string   | No       | Short description of what the agent does.        |
-| `author`      | string   | No       | Author or organization.                          |
-| `license`     | string   | No       | License identifier (e.g. "MIT", "commercial").   |
-| `tags`        | string[] | No       | Searchable tags for discovery.                   |
+A descriptor is YAML or JSON matching
+`schemas/0.2/hap-agent.schema.json`.
 
 ```yaml
+hap: "0.2"
 agent:
-  name: "jira-project-manager"
-  version: "1.2.0"
-  description: "Manages Jira projects -- triages issues, assigns work, writes sprint reports"
-  author: "acme-agents"
-  license: "commercial"
-  tags: ["project-management", "jira", "agile"]
-```
-
-### 2.3 mind
-
-LLM configuration. Declares which models the agent supports and how to reach them.
-
-| Field       | Type           | Description                              |
-|-------------|----------------|------------------------------------------|
-| `default`   | string         | Default model name.                      |
-| `supported` | string[]       | Supported model patterns (glob allowed). |
-| `endpoint`  | string or null | Custom LLM endpoint URL, or null.        |
-
-```yaml
-mind:
-  default: "claude-sonnet-4-6"
-  supported: ["claude-*", "gpt-4o", "bedrock/*", "ollama/*"]
-  endpoint: null
-```
-
-Agents that do not use an LLM omit this section entirely.
-
-### 2.4 credentials
-
-Declares credentials the agent requires or can optionally use. Each credential is identified by name and injected as an environment variable at runtime.
-
-| Field      | Type         | Description                                      |
-|------------|--------------|--------------------------------------------------|
-| `required` | Credential[] | Credentials that must be present for the agent.  |
-| `optional` | Credential[] | Credentials the agent can use if available.      |
-
-Each Credential object has:
-
-| Field         | Type   | Required | Description                        |
-|---------------|--------|----------|------------------------------------|
-| `name`        | string | Yes      | Environment variable name.         |
-| `description` | string | No       | Human-readable purpose.            |
-
-```yaml
-credentials:
-  required:
-    - name: JIRA_API_TOKEN
-      description: "Jira API token with read/write access"
-    - name: LLM_API_KEY
-      description: "API key for the LLM provider"
-  optional:
-    - name: SLACK_WEBHOOK_URL
-      description: "For sending sprint summaries to Slack"
-```
-
-### 2.5 instructions
-
-Configures how runtime instructions (prompts, rules, style guides) are loaded into the agent.
-
-| Field           | Type     | Description                                            |
-|-----------------|----------|--------------------------------------------------------|
-| `path`          | string   | Path to the instructions directory inside the container.|
-| `format`        | string   | File format: `"markdown"` or `"text"`.                 |
-| `hot_reload`    | boolean  | Whether instructions can be reloaded without restart.  |
-| `supported`     | string[] | Instruction categories the agent accepts.              |
-| `not_supported` | string[] | Instruction categories the agent does not accept.      |
-
-```yaml
-instructions:
-  path: "/agent/instructions/"
-  format: "markdown"
-  hot_reload: true
-  supported:
-    - "tone_and_style"
-    - "domain_rules"
-    - "forbidden_actions"
-  not_supported:
-    - "custom_tool_definitions"
-```
-
-### 2.6 activation
-
-Defines how the agent is triggered. See Section 5 for the full description of each mode.
-
-| Field      | Type   | Description                                   |
-|------------|--------|-----------------------------------------------|
-| `mode`     | string | One of: `manual`, `continuous`, `scheduled`, `event`, `task`. |
-| `schedule` | string | Cron expression. Required when mode is `scheduled`. |
-
-```yaml
-activation:
-  mode: "continuous"
-```
-
-### 2.7 interfaces
-
-Communication interfaces the agent supports for receiving input.
-
-**task** -- structured task input:
-
-| Field    | Type   | Description                      |
-|----------|--------|----------------------------------|
-| `format` | string | Input format (e.g. `"json"`).    |
-| `schema` | string | Path to a JSON Schema for input, resolved inside the agent's own image (not a file in this repo). |
-
-**chat** -- conversational input:
-
-| Field      | Type   | Description                          |
-|------------|--------|--------------------------------------|
-| `protocol` | string | Protocol type (e.g. `"websocket"`).  |
-
-**human_feedback** -- human-in-the-loop feedback:
-
-| Field   | Type    | Description                              |
-|---------|---------|------------------------------------------|
-| `async` | boolean | Whether feedback is delivered asynchronously. |
-
-```yaml
-interfaces:
+  name: researcher
+  version: 1.0.0
+contracts:
   task:
-    format: "json"
-    schema: "schemas/task.json"
-  chat:
-    protocol: "websocket"
-  human_feedback:
-    async: true
+    schema: schemas/research-task.json
+  result:
+    schema: schemas/research-result.json
+capabilities:
+  - id: cited-research
+    description: Produces findings with cited sources.
+credentials:
+  - id: search-api
+    required: true
+    methods: [bearer, workload_identity]
+    description: Credential for the configured search provider.
+lifecycle:
+  health: supported
+  cancellation: best_effort
+  graceful_shutdown: supported
+  max_concurrent_runs: 4
+interfaces:
+  - id: local
+    type: process
+    protocol: jsonl
+    command: ["./researcher", "serve"]
 ```
 
-### 2.8 a2a
+Required fields are `hap`, `agent.name`, `agent.version`, and at least one
+interface. Agent versions use Semantic Versioning. Relative contract schema
+references resolve from the descriptor location. Ordinary offline validation
+does not fetch arbitrary remote schemas.
 
-Agent-to-agent communication configuration.
+Capabilities are informational publisher assertions. They are not permission
+grants, routing rules, or substitutes for task and result validation.
 
-| Field          | Type         | Description                                    |
-|----------------|--------------|------------------------------------------------|
-| `enabled`      | boolean      | Whether agent-to-agent communication is on.    |
-| `capabilities` | Capability[] | Operations this agent exposes to other agents. |
-| `accepts`      | string[]     | Message types the agent can receive.           |
+Credential methods standardized in 0.2 are bearer, basic, OAuth2 client
+credentials, mTLS, and workload identity. Deployment configuration maps
+credential IDs to a secret provider.
 
-Each Capability has:
+Lifecycle metadata may declare a positive startup timeout, health support,
+cancellation as supported, best effort, or unsupported, graceful shutdown
+support, and positive maximum concurrent runs. Scheduling and retries belong
+to the caller or a Flow.
 
-| Field         | Type   | Description                               |
-|---------------|--------|-------------------------------------------|
-| `name`        | string | Capability identifier.                    |
-| `input`       | string | Expected input format.                    |
-| `description` | string | What the capability does.                 |
+## Interfaces
+
+Interface order is preference order unless project configuration pins a
+descriptor-local interface ID.
+
+### Process/JSONL
 
 ```yaml
-a2a:
-  enabled: true
-  capabilities:
-    - name: "triage-issue"
-      input: "json"
-      description: "Send me a Jira issue, I'll classify and route it"
-  accepts: ["task", "query", "event"]
+- id: local
+  type: process
+  protocol: jsonl
+  command: ["./agent", "serve"]
 ```
 
-### 2.9 reporting
+The command starts without a shell. Standard input and output contain one
+compact JSON message per line. Standard error is diagnostic output. The caller
+and agent perform a version handshake before task delivery.
 
-Observability and reporting output configuration.
-
-| Field      | Type      | Description                              |
-|------------|-----------|------------------------------------------|
-| `default`  | string    | Default reporting target (e.g. `"stdout"`). |
-| `adapters` | Adapter[] | Additional reporting adapters.           |
-
-Each Adapter has:
-
-| Field        | Type   | Description                                     |
-|--------------|--------|-------------------------------------------------|
-| `name`       | string | Adapter name (e.g. `"datadog"`).                |
-| `config_env` | string | Environment variable holding adapter config.    |
+### HTTP
 
 ```yaml
-reporting:
-  default: "stdout"
-  adapters:
-    - name: "datadog"
-      config_env: "DD_API_KEY"
+- id: api
+  type: http
+  endpoint: https://agents.example.com/researcher
+  events: both
 ```
 
-### 2.10 conduct
+HTTP resources are `POST /tasks`, `GET /runs/{run_id}`,
+`GET /runs/{run_id}/events`, `POST /runs/{run_id}/cancel`, and `GET /health`.
+Event delivery is polling, streaming, or both; polling is the default.
 
-Safety guardrails and failure handling policy.
-
-| Field              | Type     | Description                                       |
-|--------------------|----------|---------------------------------------------------|
-| `guardrails`       | string[] | Human-readable descriptions of safety boundaries. |
-| `failure_protocol` | string   | Behavior on failure (e.g. `"report_and_pause"`).  |
+### WebSocket
 
 ```yaml
-conduct:
-  guardrails:
-    - "Will not delete Jira projects"
-    - "Will not modify user permissions"
-    - "Max 100 API calls per minute"
-  failure_protocol: "report_and_pause"
+- id: stream
+  type: websocket
+  endpoint: wss://agents.example.com/researcher
 ```
 
-### 2.11 debug
+WebSocket uses the same handshake and framed messages as process/JSONL.
+Reconnect uses the run ID and last observed event sequence. If resumption is
+not possible, the agent returns an explicit non-resumable error.
 
-Debug mode configuration.
-
-| Field       | Type    | Description                                  |
-|-------------|---------|----------------------------------------------|
-| `enabled`   | boolean | Whether debug mode is available.             |
-| `interface` | string  | Debug interface type (e.g. `"http"`).        |
-| `auth`      | boolean | Whether the debug interface requires auth.   |
-
-### 2.12 cost_estimate
-
-Cost metadata for transparency.
-
-| Field                    | Type     | Description                               |
-|--------------------------|----------|-------------------------------------------|
-| `llm_cost_per_task`      | string   | Estimated LLM cost per task.              |
-| `typical_monthly_llm`    | string   | Typical monthly LLM spend.               |
-| `required_subscriptions` | string[] | External subscriptions the agent needs.   |
-
-### 2.13 registry
-
-Container registry configuration used when publishing the agent's image. Optional; consumed by packaging/publishing tooling (see Section 7.2).
-
-| Field       | Type   | Description                                  |
-|-------------|--------|----------------------------------------------|
-| `url`       | string | Registry URL (e.g. `ghcr.io`, `docker.io`).  |
-| `namespace` | string | Registry namespace or organization.          |
+### A2A 1.0
 
 ```yaml
-registry:
-  url: "ghcr.io"
-  namespace: "hap-team"
+- id: a2a
+  type: a2a
+  endpoint: https://agents.example.com/a2a
+  version: "1.0"
 ```
 
----
+The adapter maps HAP messages and semantics to A2A 1.0. The HAP descriptor
+remains authoritative for HAP identity and contracts. A native A2A agent
+without a HAP descriptor can still be used by an orchestrator plugin, but is
+not thereby HAP-conforming.
 
-## 3. Event Protocol
+## Canonical messages
 
-### 3.1 Format
+Every framed message has a `type` discriminator and validates against
+`schemas/0.2/message.schema.json`.
 
-Agents emit events as JSONL (newline-delimited JSON) to **stdout**. Each line is one independently parseable JSON object. Debug logs and free-form output go to **stderr**.
+### Task
 
-This separation is a hard requirement: stdout must contain only valid JSONL event lines. Any non-JSON output on stdout is a protocol violation.
+A Task requires protocol version, caller-generated task ID, globally unique
+run ID within the caller domain, operation, input, and context. An optional
+deadline is RFC 3339. Board- or vendor-specific identifiers belong in context
+or namespaced extensions, not core fields.
 
-### 3.2 Required Fields
+### Event
 
-Every event object must contain these two fields:
+An Event requires run ID, positive sequence, RFC 3339 time, name, and data.
+Sequence numbers strictly increase per run. Events are non-terminal.
 
-| Field   | Type   | Description                                      |
-|---------|--------|--------------------------------------------------|
-| `event` | string | The event type identifier.                       |
-| `ts`    | string | ISO 8601 / RFC 3339 timestamp in UTC.            |
+Standard event names are accepted, started, progress, output, usage, warning,
+and cancellation requested. Namespaced event names are allowed.
 
-Additional fields depend on the event type and are described below.
+### Result
 
-### 3.3 Event Types
+Exactly one terminal Result may be produced per run. Status is succeeded,
+failed, or cancelled. Outcome is an agent-defined, contract-documented value
+that a Flow may map to an edge. A failed Result includes a structured error
+with code, readable message, and retryability.
 
-The protocol defines nine event types in two categories.
+Transport loss before a Result means unknown outcome. It is not success or
+failure.
 
-**Agent lifecycle events:**
+### Cancellation
 
-| Type               | Description                                   |
-|--------------------|-----------------------------------------------|
-| `agent.started`    | Agent process has started.                    |
-| `agent.ready`      | Agent is initialized and ready to work.       |
-| `agent.heartbeat`  | Periodic health signal.                       |
-| `agent.stopped`    | Agent is shutting down gracefully.            |
-| `agent.error`      | Agent encountered a non-task-specific error.  |
+A cancellation request identifies a run and may include a reason.
+Acknowledgement repeats the same run ID and reports whether the request was
+accepted and whether the run was already terminal. Acknowledgement does not
+claim an unsupported remote process stopped.
 
-**Task lifecycle events:**
+Cancellation is idempotent. Supported cancellation eventually produces a
+terminal Result. Best-effort cancellation may report that work could not be
+stopped. Unsupported cancellation allows the caller to stop waiting while the
+remote outcome remains unknown.
 
-| Type              | Description                                    |
-|-------------------|------------------------------------------------|
-| `task.started`    | A discrete unit of work has begun.             |
-| `task.progress`   | Reports progress on an in-flight task.         |
-| `task.completed`  | A task finished successfully.                  |
-| `task.failed`     | A task finished with an error.                 |
+## Usage and actual cost
 
-### 3.4 Event Examples
-
-**agent.started** -- emitted once at process start:
+Usage is optional. When present, measurements have a non-negative quantity and
+explicit unit. Provider and model are optional informational dimensions.
 
 ```json
-{"event":"agent.started","ts":"2026-03-06T09:00:01Z"}
+{
+  "measurements": [
+    {
+      "name": "llm.input_tokens",
+      "quantity": 1250,
+      "unit": "token",
+      "provider": "openai",
+      "model": "gpt-example"
+    }
+  ],
+  "cost": {
+    "amount": "0.01234",
+    "currency": "USD",
+    "source": "gateway"
+  }
+}
 ```
 
-**agent.ready** -- emitted once when the agent is fully initialized:
-
-```json
-{"event":"agent.ready","ts":"2026-03-06T09:00:01Z"}
-```
-
-**agent.heartbeat** -- emitted periodically to signal liveness:
-
-```json
-{"event":"agent.heartbeat","ts":"2026-03-06T09:00:12Z","status":"healthy","uptime":11}
-```
-
-Optional fields: `status` (string), `uptime` (integer, seconds since start).
-
-**agent.stopped** -- emitted before graceful exit (e.g. on SIGTERM):
-
-```json
-{"event":"agent.stopped","ts":"2026-03-06T09:05:00Z"}
-```
-
-**agent.error** -- emitted on non-task errors:
-
-```json
-{"event":"agent.error","ts":"2026-03-06T09:03:00Z","detail":"database connection lost"}
-```
-
-Optional fields: `detail` (string).
-
-**task.started** -- emitted when a unit of work begins:
-
-```json
-{"event":"task.started","ts":"2026-03-06T09:00:03Z","task_id":"t-001","detail":"Checking https://example.com"}
-```
-
-Optional fields: `task_id` (string), `detail` (string).
-
-**task.completed** -- emitted when a task finishes successfully:
-
-```json
-{"event":"task.completed","ts":"2026-03-06T09:00:03Z","task_id":"t-001","detail":"status=200 time=142ms"}
-```
-
-Optional fields: `task_id` (string), `detail` (string).
-
-**task.progress** -- emitted to report progress on an in-flight task:
-
-```json
-{"event":"task.progress","ts":"2026-03-06T09:00:03Z","task_id":"t-001","message":"Processing items","progress":0.75}
-```
-
-Optional fields: `task_id` (string), `message` (string), `progress` (number, 0-1).
-
-**task.failed** -- emitted when a task finishes with an error:
-
-```json
-{"event":"task.failed","ts":"2026-03-06T09:00:04Z","task_id":"t-001","detail":"connection refused"}
-```
-
-Optional fields: `task_id` (string), `detail` (string).
-
-### 3.5 Lifecycle Diagram
-
-Agent lifecycle:
-
-```
-agent.started --> agent.ready --> [agent.heartbeat]* --> agent.stopped
-                                         |
-                                    agent.error (may occur at any point)
-```
-
-Task lifecycle (may occur zero or more times while the agent is ready):
-
-```
-task.started --> [task.progress]* --> task.completed
-                                 \-> task.failed
-```
-
-### 3.6 Conventions
-
-- Agents SHOULD emit `agent.started` immediately on process start.
-- Agents SHOULD emit `agent.ready` once initialization is complete.
-- Agents in `continuous` mode SHOULD emit `agent.heartbeat` at a regular interval (recommended: 10-30 seconds).
-- Agents MUST emit `agent.stopped` before graceful exit. The agent should handle SIGTERM and use it as the signal to shut down.
-- Task events SHOULD include a `task_id` to correlate `task.started` with its `task.completed` or `task.failed`.
-- Additional fields beyond those documented here are permitted. Consumers MUST ignore fields they do not recognize.
-
----
-
-## 4. Credentials Model
-
-Credentials are declared in the `credentials` section of `hap.yaml` and injected into the agent process as environment variables.
-
-### 4.1 Declaration
-
-Credentials are split into two lists:
-
-- **required**: The agent cannot function without these. The runtime MUST refuse to start the agent if any required credential is missing.
-- **optional**: The agent can function without these but may offer reduced functionality.
-
-Each credential's `name` field corresponds exactly to the environment variable name the agent reads at runtime.
-
-### 4.2 Injection
-
-During development (`hap dev`), credentials are loaded from a `.env` file in the project directory. In production, credentials are injected as environment variables by the container runtime, orchestrator, or secret manager.
-
-The agent binary reads credentials via standard environment variable access (e.g. `os.Getenv` in Go, `process.env` in Node.js). HAP does not define a secrets API -- environment variables are the universal interface.
-
-### 4.3 Security
-
-- `.env` files MUST NOT be committed to version control. The scaffolded `.gitignore` excludes `.env` by default.
-- Container images MUST NOT embed credentials. Credentials are always injected at runtime.
-
----
-
-## 5. Activation Modes
-
-The `activation.mode` field declares how the agent is triggered. The runtime uses this to determine process lifecycle.
-
-| Mode         | Description                                                                |
-|--------------|----------------------------------------------------------------------------|
-| `manual`     | Started explicitly by a human operator. Runs once and exits.               |
-| `continuous` | Starts and runs indefinitely. Emits heartbeats. Stopped via SIGTERM.       |
-| `scheduled`  | Triggered on a cron schedule. The `activation.schedule` field is required.  |
-| `event`      | Triggered by an external event (webhook, message queue, etc.).             |
-| `task`       | Triggered by a task submission. Processes the task and exits.              |
-
-### 5.1 Scheduled Mode
-
-When `mode` is `"scheduled"`, the `schedule` field must contain a valid cron expression:
-
-```yaml
-activation:
-  mode: "scheduled"
-  schedule: "0 */6 * * *"  # every 6 hours
-```
-
-### 5.2 Continuous Mode
-
-Continuous agents run as long-lived processes. They MUST emit periodic `agent.heartbeat` events. The runtime uses missing heartbeats to detect unhealthy agents.
-
-### 5.3 Task Mode
-
-Task-mode agents receive input (via stdin, HTTP, or another mechanism defined by `interfaces`), process it, emit task events, and exit. They are not expected to emit heartbeats.
-
----
-
-## 6. Container Packaging
-
-HAP agents are distributed as OCI-compliant container images.
-
-### 6.1 Image Layout
-
-A conforming HAP image must satisfy these requirements:
-
-- The `hap.yaml` manifest MUST be present at `/hap.yaml` inside the image.
-- The agent binary (or interpreter entrypoint) MUST be the container's `ENTRYPOINT`.
-- The image SHOULD be as small as practical. Multi-stage builds are recommended.
-
-### 6.2 Reference Dockerfile
-
-The following Dockerfile illustrates the packaging convention for a Go agent:
-
-```dockerfile
-FROM golang:1.22-alpine AS build
-WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
-RUN CGO_ENABLED=0 go build -o /agent .
-
-FROM alpine:3.19
-COPY --from=build /agent /agent
-COPY hap.yaml /hap.yaml
-ENTRYPOINT ["/agent"]
-```
-
-### 6.3 Image Tagging
-
-Images are tagged as `<agent-name>:<agent-version>`, derived from the `agent.name` and `agent.version` fields in `hap.yaml`:
-
-```
-health-checker:0.1.0
-jira-project-manager:1.2.0
-```
-
-### 6.4 Runtime Contract
-
-When a container is started:
-
-1. Required credentials are injected as environment variables.
-2. The entrypoint process starts and emits `agent.started` on stdout.
-3. Stdout is captured as the JSONL event stream.
-4. Stderr is captured as debug log output.
-5. To stop the agent, the runtime sends SIGTERM. The agent emits `agent.stopped` and exits.
-
----
-
-## 7. Versioning
-
-### 7.1 Manifest Version
-
-The top-level `version` field identifies the manifest specification version. This document defines version `"0.1"` (draft). Future revisions will increment this field. Runtimes SHOULD reject manifests with unrecognized version values.
-
-### 7.2 Agent Version
-
-The `agent.version` field tracks the agent's own release version. Semantic versioning (MAJOR.MINOR.PATCH) is recommended but not enforced by the schema. This version is used for image tagging, registry publishing, and upgrade decisions.
-
-### 7.3 Compatibility
-
-- Consumers of `hap.yaml` MUST ignore unknown top-level sections to allow forward compatibility.
-- Event consumers MUST ignore unrecognized fields in JSONL events.
-- New event types may be added in future protocol versions. Consumers SHOULD treat unrecognized event types as informational rather than errors.
+Cost amount is a non-negative decimal string, never a JSON number. Omitted cost
+means unavailable. Zero means measured zero. The final Result is authoritative
+for cumulative usage when present. LiteLLM may supply measured usage inside an
+implementation, but HAP neither requires nor configures it.
+
+## Trace context
+
+Task and Result may carry W3C `traceparent` and `tracestate`. Agents should
+propagate valid context to downstream work. No tracing backend or SDK is
+required.
+
+## Security and limits
+
+- Descriptors, URLs, messages, events, errors, and logs must not contain raw
+  credentials.
+- Process stdout contains protocol frames only.
+- Conformance transports limit an individual frame or body to 4 MiB.
+- HTTP redirects to a different host are rejected by default.
+- Implementations validate task and result contracts at trust boundaries.
+
+## Conformance levels
+
+- Descriptor conformance: the descriptor validates against the released
+  schema.
+- Interface conformance: a declared interface preserves canonical message
+  semantics and required transport behavior.
+- Published-agent conformance: a released descriptor has at least one passing
+  declared interface.
+
+OCI images are an optional CLI packaging format, not a protocol conformance
+layer.
