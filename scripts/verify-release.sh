@@ -3,6 +3,7 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
+version="${1:-0.2.0-rc.2}"
 
 forbidden='(^|[[:space:]])(mind|activation|cost_estimate|registry|reporting|conduct|debug):|^version:[[:space:]]*"0\.1"'
 if rg -n "$forbidden" README.md docs examples --glob '*.md' --glob '*.yaml'; then
@@ -33,14 +34,18 @@ fi
 
 go test ./...
 
-first_archive="$(SOURCE_DATE_EPOCH=1784188800 scripts/build-release.sh 0.2.0-rc.1)"
+first_archive="$(SOURCE_DATE_EPOCH=1784188800 scripts/build-release.sh "$version")"
 first_checksum="$(sha256sum "$first_archive")"
-second_archive="$(SOURCE_DATE_EPOCH=1784188800 scripts/build-release.sh 0.2.0-rc.1)"
+second_archive="$(SOURCE_DATE_EPOCH=1784188800 scripts/build-release.sh "$version")"
 second_checksum="$(sha256sum "$second_archive")"
 if [[ "$first_checksum" != "$second_checksum" ]]; then
   echo "release archive is not reproducible" >&2
   exit 1
 fi
 
-tar -tzf "$first_archive" | rg -q 'hap-protocol-0.2.0-rc.1/schemas/0.2/message.schema.json'
-tar -tzf "$first_archive" | rg -q 'hap-protocol-0.2.0-rc.1/conformance/scenarios/success.json'
+tar -tzf "$first_archive" | rg -q "hap-protocol-$version/schemas/0.2/message.schema.json"
+tar -tzf "$first_archive" | rg -q "hap-protocol-$version/conformance/scenarios/success.json"
+if tar -tzf "$first_archive" | rg -q 'conformance/scenarios/.*\.go$'; then
+	echo "release scenarios contain Go source" >&2
+	exit 1
+fi
