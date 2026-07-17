@@ -149,6 +149,20 @@ run ID within the caller domain, operation, input, and context. An optional
 deadline is RFC 3339. Board- or vendor-specific identifiers belong in context
 or namespaced extensions, not core fields.
 
+### Orchestration rules and skills
+
+Team responsibilities, rules, and skill references are orchestration context,
+not HAP 0.2 descriptor fields. An orchestrator adapter may map resolved rule
+text and requested skills into Task context or agent-specific task input when
+the declared task contract supports them.
+
+HAP 0.2 does not define a universal executable skill package. Codex, Claude,
+AgentCore, deterministic agents, and custom frameworks may use different skill
+formats. The invoking adapter must validate support before invocation, and a
+required unsupported skill must fail before work is claimed. An `x-*`
+descriptor extension may advertise integration hints, but it does not change
+HAP conformance or authorize automatic workflow routing.
+
 ### Event
 
 An Event requires run ID, positive sequence, RFC 3339 time, name, and data.
