@@ -20,11 +20,15 @@ func main() {
 }
 
 func run(args []string, stdout, stderr io.Writer) int {
+	if len(args) > 0 && args[0] == "job" {
+		return runJob(args[1:], stdout, stderr)
+	}
 	if len(args) > 0 && args[0] == "interface" {
 		return runInterface(args[1:], stdout, stderr)
 	}
 	flags := flag.NewFlagSet("hap-conformance", flag.ContinueOnError)
 	flags.SetOutput(stderr)
+	evidence := evidenceFlags(flags)
 	schemaPath := flags.String("schema", "", "path to the HAP agent descriptor schema")
 	descriptorPath := flags.String("file", "", "path to a HAP agent descriptor")
 	if err := flags.Parse(args); err != nil {
@@ -65,6 +69,10 @@ func run(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "descriptor identity: %v\n", err)
 		return 2
 	}
+	if err := evidence.write(data, nil, "", "succeeded"); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
 	fmt.Fprintf(stdout, "HAP %s %s@%s\n", descriptor.HAP, descriptor.Agent.Name, descriptor.Agent.Version)
 	return 0
 }
@@ -72,6 +80,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 func runInterface(args []string, stdout, stderr io.Writer) int {
 	flags := flag.NewFlagSet("hap-conformance interface", flag.ContinueOnError)
 	flags.SetOutput(stderr)
+	evidence := evidenceFlags(flags)
 	descriptorPath := flags.String("descriptor", "", "path to a HAP agent descriptor")
 	interfaceID := flags.String("interface", "", "descriptor-local interface ID")
 	endpointOverride := flags.String("endpoint", "", "runtime endpoint override for HTTP, WebSocket, or A2A")
@@ -162,6 +171,10 @@ func runInterface(args []string, stdout, stderr io.Writer) int {
 		err = fmt.Errorf("unsupported interface type %q", declared.Type)
 	}
 	if err != nil {
+		if issueErr := evidence.write(data, scenarioData, *interfaceID, "failed"); issueErr != nil {
+			fmt.Fprintln(stderr, issueErr)
+			return 2
+		}
 		fmt.Fprintln(stderr, err)
 		return 1
 	}
@@ -170,8 +183,16 @@ func runInterface(args []string, stdout, stderr io.Writer) int {
 		result.RunID != scenario.Result.RunID ||
 		result.Status != scenario.Result.Status ||
 		result.Outcome != scenario.Result.Outcome {
+		if err := evidence.write(data, scenarioData, *interfaceID, "failed"); err != nil {
+			fmt.Fprintln(stderr, err)
+			return 2
+		}
 		fmt.Fprintln(stderr, "interface result differs from scenario")
 		return 1
+	}
+	if err := evidence.write(data, scenarioData, *interfaceID, "succeeded"); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
 	}
 	fmt.Fprintf(stdout, "PASS %s (%s)\n", *interfaceID, declared.Type)
 	return 0

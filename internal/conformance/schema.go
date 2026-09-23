@@ -4,12 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
-	"runtime"
 	"strings"
 	"sync"
 
+	"github.com/hap-team/protocol/schemas"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	"gopkg.in/yaml.v3"
 )
@@ -135,19 +133,12 @@ func ValidateCancellationAcknowledgement(request, acknowledgement []byte) ([]Vio
 
 func loadDescriptorSchema() (*jsonschema.Schema, error) {
 	descriptorSchemaOnce.Do(func() {
-		_, sourceFile, _, ok := runtime.Caller(0)
-		if !ok {
-			descriptorSchemaErr = fmt.Errorf("locate conformance package")
-			return
-		}
-		schemaDir := filepath.Clean(filepath.Join(filepath.Dir(sourceFile), "..", "..", "schemas", "0.2"))
-
 		compiler := jsonschema.NewCompiler()
 		compiler.Draft = jsonschema.Draft2020
 		compiler.AssertFormat = true
 
 		for _, name := range []string{"common.schema.json", "hap-agent.schema.json"} {
-			data, err := os.ReadFile(filepath.Join(schemaDir, name))
+			data, err := schemas.Files.ReadFile("0.2/" + name)
 			if err != nil {
 				descriptorSchemaErr = fmt.Errorf("read %s: %w", name, err)
 				return
@@ -187,12 +178,6 @@ func loadMessageSchema() (*jsonschema.Schema, error) {
 }
 
 func newSchemaCompiler() (*jsonschema.Compiler, error) {
-	_, sourceFile, _, ok := runtime.Caller(0)
-	if !ok {
-		return nil, fmt.Errorf("locate conformance package")
-	}
-	schemaDir := filepath.Clean(filepath.Join(filepath.Dir(sourceFile), "..", "..", "schemas", "0.2"))
-
 	compiler := jsonschema.NewCompiler()
 	compiler.Draft = jsonschema.Draft2020
 	compiler.AssertFormat = true
@@ -206,7 +191,7 @@ func newSchemaCompiler() (*jsonschema.Compiler, error) {
 		"handshake.schema.json",
 		"message.schema.json",
 	} {
-		data, err := os.ReadFile(filepath.Join(schemaDir, name))
+		data, err := schemas.Files.ReadFile("0.2/" + name)
 		if err != nil {
 			return nil, fmt.Errorf("read %s: %w", name, err)
 		}
