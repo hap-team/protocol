@@ -1,0 +1,11 @@
+# syntax=docker/dockerfile:1.7
+FROM golang:1.26-bookworm@sha256:1ecb7edf62a0408027bd5729dfd6b1b8766e578e8df93995b225dfd0944eb651 AS build
+WORKDIR /src
+COPY . .
+RUN chmod 755 scripts/git-askpass.sh
+RUN --mount=type=secret,id=github-token,required=true GOPRIVATE=github.com/hap-team GIT_TERMINAL_PROMPT=0 GIT_ASKPASS=/src/scripts/git-askpass.sh go mod download
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o /hap-conformance ./cmd/hap-conformance
+FROM gcr.io/distroless/base-debian12:nonroot@sha256:63f52bd27b6aa6555f5d56500b70d7bb0afe51c654905be88a2c1cf967a77b1a
+COPY --from=build /hap-conformance /hap-conformance
+USER 65532:65532
+ENTRYPOINT ["/hap-conformance"]

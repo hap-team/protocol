@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HAP packaged agent conformance context v2",
+  "type": "object",
+  "required": [
+    "schema",
+    "agentName",
+    "agentVersion",
+    "protocolVersion",
+    "definitionDigest",
+    "artifactDigest",
+    "check",
+    "suite",
+    "scenarioDigest",
+    "platform",
+    "manifestDigest",
+    "runtimeConfigDigest",
+    "verifierArtifactDigest",
+    "verificationReceiptDigest",
+    "fixturesDigest",
+    "executionDigest"
+  ],
+  "properties": {
+    "schema": {
+      "const": "dev.hap.agent-conformance-context/v2"
+    },
+    "agentName": {
+      "type": "string"
+    },
+    "agentVersion": {
+      "type": "string"
+    },
+    "protocolVersion": {
+      "const": "0.2"
+    },
+    "definitionDigest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "artifactDigest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "check": {
+      "enum": [
+        "descriptor",
+        "interface"
+      ]
+    },
+    "interfaceId": {
+      "type": "string"
+    },
+    "suite": {
+      "const": "hap-0.2-packaged-agent/v1"
+    },
+    "scenarioDigest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "platform": {
+      "type": "string",
+      "pattern": "^linux/[a-z0-9]+$"
+    },
+    "manifestDigest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "runtimeConfigDigest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "verifierArtifactDigest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "verificationReceiptDigest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "fixturesDigest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "executionDigest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "check": {
+            "const": "interface"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "interfaceId"
+        ],
+        "properties": {
+          "interfaceId": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "else": {
+        "not": {
+          "required": [
+            "interfaceId"
+          ]
+        }
+      }
+    }
+  ]
+}

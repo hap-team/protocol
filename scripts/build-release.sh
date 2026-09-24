@@ -7,8 +7,8 @@ if [[ $# -ne 1 ]]; then
 fi
 
 version="$1"
-if [[ ! "$version" =~ ^0\.2\.0(-rc\.[1-9][0-9]*)?$ ]]; then
-  echo "version must be 0.2.0 or a 0.2.0 release candidate" >&2
+if [[ ! "$version" =~ ^0\.2\.[0-9]+(-rc\.[1-9][0-9]*)?$ ]]; then
+  echo "version must be a 0.2 patch release or release candidate" >&2
   exit 2
 fi
 
@@ -25,6 +25,7 @@ trap 'rm -rf "$stage"' EXIT
 package="$stage/hap-protocol-$version"
 mkdir -p "$package/schemas" "$package/conformance" "$package/docs"
 cp -R "$repo_root/schemas/0.2" "$package/schemas/"
+cp "$repo_root/schemas/agent-conformance-context-v2.schema.json" "$package/schemas/"
 cp -R "$repo_root/conformance/descriptors" "$package/conformance/"
 cp -R "$repo_root/conformance/messages" "$package/conformance/"
 mkdir -p "$package/conformance/scenarios"

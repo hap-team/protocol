@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://humanagentprotocol.com/schemas/0.2/conformance-context.schema.json",
+  "title": "Receipt-bound HAP agent conformance context",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "agentName", "agentVersion", "protocolVersion", "definitionDigest", "artifactDigest", "check", "suite", "scenarioDigest"],
+  "properties": {
+    "schema": {"const": "dev.hap.agent-conformance-context/v1"},
+    "agentName": {"type": "string", "minLength": 1},
+    "agentVersion": {"type": "string", "minLength": 1},
+    "protocolVersion": {"const": "0.2"},
+    "definitionDigest": {"$ref": "#/$defs/digest"},
+    "artifactDigest": {"$ref": "#/$defs/digest"},
+    "check": {"enum": ["descriptor", "interface"]},
+    "interfaceId": {"type": "string", "minLength": 1},
+    "suite": {"const": "hap-0.2-published-agent/v1"},
+    "scenarioDigest": {"$ref": "#/$defs/digest"}
+  },
+  "allOf": [{
+    "if": {"properties": {"check": {"const": "interface"}}},
+    "then": {"required": ["interfaceId"]},
+    "else": {"not": {"required": ["interfaceId"]}}
+  }],
+  "$defs": {"digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}}
+}
