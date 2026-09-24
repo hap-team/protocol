@@ -1,0 +1,49 @@
+schema: local-ci/v1
+service: conformance
+default: verify
+runtime: {image: 'golang:1.26.3-bookworm', platform: linux/arm64, workdir: .}
+secret_refs:
+  registry-password: {from_env: HOME_REGISTRY_PUBLISHER_PASSWORD}
+  github-packages-read: {from_env: HAP_PACKAGES_READ_TOKEN}
+jobs:
+  verify:
+    executor: local
+    uses: local/command@v1
+    with:
+      executable: scripts/verify-conformance.sh
+      working_directory: .
+      arguments: '[]'
+      environment: '{}'
+      secret_env: '{}'
+      mutation: 'false'
+  release-context:
+    executor: local
+    needs: [verify]
+    uses: local/command@v1
+    with:
+      executable: scripts/prepare-conformance.py
+      working_directory: .
+      arguments: '[]'
+      environment: '{}'
+      secret_env: '{}'
+      mutation: 'false'
+      artifact_output: release
+  package-home:
+    executor: local
+    needs: [release-context]
+    uses: oci/build-push@v1
+    inputs: {context: 'release-context:artifact'}
+    secrets: [registry-password, github-packages-read]
+    with:
+      connection: home-registry
+      registry_username: home-registry-publisher
+      dockerfile: Dockerfile.conformance
+      repository: hap-conformance
+      platform: linux/amd64
+      build_args: '{}'
+      secret_build_args: '{}'
+      build_secrets: '{"github-packages-read":"github-token"}'
+entrypoints:
+  verify: [verify]
+  prepare: [release-context]
+  package-home: [package-home]

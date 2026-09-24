@@ -104,3 +104,64 @@ func TestEvidenceRoundTripPreservesExactSignedContextBytes(t *testing.T) {
 		t.Fatalf("roundtrip lost signature binding: %#v", got)
 	}
 }
+
+func TestDeploymentRequiresPackagedEvidenceForExactPlatformAndInterface(t *testing.T) {
+	pub, key, _ := ed25519.GenerateKey(rand.Reader)
+	keys := map[string]Verifier{"fixture": {PublicKey: pub, ProducerID: ProducerID}}
+	digest := receipts.Digest([]byte("image"))
+	at := time.Now().Add(-time.Minute).UTC()
+	c := Context{Schema: PackagedContextSchema, AgentName: "sample-agent", AgentVersion: "1.0.0", ProtocolVersion: "0.2", DefinitionDigest: receipts.Digest(descriptor), ArtifactDigest: digest, Suite: PackagedSuiteID, ScenarioDigest: digest, Platform: "linux/amd64", ManifestDigest: digest, RuntimeConfigDigest: digest, VerifierArtifactDigest: digest, VerificationReceiptDigest: digest, FixturesDigest: digest, ExecutionDigest: digest}
+	issue := func(check, iface string) Evidence {
+		t.Helper()
+		v := c
+		v.Check = check
+		v.InterfaceID = iface
+		e, err := Issue(v, "succeeded", "test-run", at, "fixture", key)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return e
+	}
+	good := []Evidence{issue("descriptor", ""), issue("interface", "api")}
+	for _, tc := range []struct {
+		name, artifact, platform, iface string
+		evidence                        []Evidence
+		trusted                         map[string]Verifier
+		pass                            bool
+	}{
+		{"exact", digest, "linux/amd64", "api", good, keys, true},
+		{"other image", receipts.Digest([]byte("other")), "linux/amd64", "api", good, keys, false},
+		{"other platform", digest, "linux/arm64", "api", good, keys, false},
+		{"other interface", digest, "linux/amd64", "other", good, keys, false},
+		{"descriptor only", digest, "linux/amd64", "api", good[:1], keys, false},
+		{"unknown signer", digest, "linux/amd64", "api", good, nil, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			result := VerifyDeployment(descriptor, tc.artifact, tc.platform, tc.iface, tc.evidence, tc.trusted)
+			if (result.State == "compatible") != tc.pass {
+				t.Fatal(result)
+			}
+		})
+	}
+	c.Schema = ContextSchema
+	c.Suite = SuiteID
+	c.Platform = ""
+	c.ManifestDigest = ""
+	c.RuntimeConfigDigest = ""
+	c.VerifierArtifactDigest = ""
+	c.VerificationReceiptDigest = ""
+	c.FixturesDigest = ""
+	c.ExecutionDigest = ""
+	source := []Evidence{issue("descriptor", ""), issue("interface", "api")}
+	if Verify(descriptor, digest, source, keys).State != "compatible" {
+		t.Fatal("legacy verification broken")
+	}
+	if VerifyDeployment(descriptor, digest, "linux/amd64", "api", source, keys).State == "compatible" {
+		t.Fatal("source tests admitted deployment")
+	}
+	tampered := append([]Evidence{}, good...)
+	tampered[1].Context = append(append([]byte{}, good[1].Context...), byte(' '))
+	if VerifyDeployment(descriptor, digest, "linux/amd64", "api", tampered, keys).State == "compatible" {
+		t.Fatal("tampered context admitted")
+	}
+}

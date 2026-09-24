@@ -20,6 +20,17 @@ func main() {
 }
 
 func run(args []string, stdout, stderr io.Writer) int {
+	if len(args) > 0 {
+		switch args[0] {
+		case "packaged":
+			return runPackaged(args[1:], stdout, stderr)
+		case "sign-packaged":
+			return runSignPackaged(args[1:], stdout, stderr)
+		case "gate-deployment":
+			return runDeploymentGate(args[1:], stdout, stderr)
+		}
+	}
+
 	if len(args) > 0 && args[0] == "job" {
 		return runJob(args[1:], stdout, stderr)
 	}

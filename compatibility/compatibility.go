@@ -18,21 +18,30 @@ import (
 
 const ContextSchema = "dev.hap.agent-conformance-context/v1"
 const SuiteID = "hap-0.2-published-agent/v1"
+const PackagedContextSchema = "dev.hap.agent-conformance-context/v2"
+const PackagedSuiteID = "hap-0.2-packaged-agent/v1"
 const ProducerID = "hap-conformance"
 
 var digestPattern = regexp.MustCompile(`^sha256:[a-f0-9]{64}$`)
 
 type Context struct {
-	Schema           string `json:"schema"`
-	AgentName        string `json:"agentName"`
-	AgentVersion     string `json:"agentVersion"`
-	ProtocolVersion  string `json:"protocolVersion"`
-	DefinitionDigest string `json:"definitionDigest"`
-	ArtifactDigest   string `json:"artifactDigest"`
-	Check            string `json:"check"`
-	InterfaceID      string `json:"interfaceId,omitempty"`
-	Suite            string `json:"suite"`
-	ScenarioDigest   string `json:"scenarioDigest"`
+	ExecutionDigest           string `json:"executionDigest,omitempty"`
+	Platform                  string `json:"platform,omitempty"`
+	ManifestDigest            string `json:"manifestDigest,omitempty"`
+	RuntimeConfigDigest       string `json:"runtimeConfigDigest,omitempty"`
+	VerifierArtifactDigest    string `json:"verifierArtifactDigest,omitempty"`
+	VerificationReceiptDigest string `json:"verificationReceiptDigest,omitempty"`
+	FixturesDigest            string `json:"fixturesDigest,omitempty"`
+	Schema                    string `json:"schema"`
+	AgentName                 string `json:"agentName"`
+	AgentVersion              string `json:"agentVersion"`
+	ProtocolVersion           string `json:"protocolVersion"`
+	DefinitionDigest          string `json:"definitionDigest"`
+	ArtifactDigest            string `json:"artifactDigest"`
+	Check                     string `json:"check"`
+	InterfaceID               string `json:"interfaceId,omitempty"`
+	Suite                     string `json:"suite"`
+	ScenarioDigest            string `json:"scenarioDigest"`
 }
 type Evidence struct {
 	// Base64 preserves the exact signed context bytes across JSON persistence.
@@ -210,7 +219,11 @@ func Verify(raw []byte, artifact string, evidence []Evidence, keys map[string]Ve
 }
 
 func validContext(c Context) bool {
-	return c.Schema == ContextSchema && c.Suite == SuiteID && c.ProtocolVersion == "0.2" && c.AgentName != "" && c.AgentVersion != "" && digestPattern.MatchString(c.DefinitionDigest) && digestPattern.MatchString(c.ArtifactDigest) && digestPattern.MatchString(c.ScenarioDigest) && ((c.Check == "descriptor" && c.InterfaceID == "") || (c.Check == "interface" && c.InterfaceID != ""))
+	provenance := c.Schema == ContextSchema && c.Suite == SuiteID && c.Platform == "" && c.ManifestDigest == "" && c.RuntimeConfigDigest == "" && c.VerifierArtifactDigest == "" && c.VerificationReceiptDigest == "" && c.FixturesDigest == "" && c.ExecutionDigest == ""
+	if c.Schema == PackagedContextSchema {
+		provenance = c.Suite == PackagedSuiteID && regexp.MustCompile(`^linux/[a-z0-9]+$`).MatchString(c.Platform) && digestPattern.MatchString(c.ManifestDigest) && digestPattern.MatchString(c.RuntimeConfigDigest) && digestPattern.MatchString(c.VerifierArtifactDigest) && digestPattern.MatchString(c.VerificationReceiptDigest) && digestPattern.MatchString(c.FixturesDigest) && digestPattern.MatchString(c.ExecutionDigest)
+	}
+	return provenance && c.ProtocolVersion == "0.2" && c.AgentName != "" && c.AgentVersion != "" && digestPattern.MatchString(c.DefinitionDigest) && digestPattern.MatchString(c.ArtifactDigest) && digestPattern.MatchString(c.ScenarioDigest) && ((c.Check == "descriptor" && c.InterfaceID == "") || (c.Check == "interface" && c.InterfaceID != ""))
 }
 func strictJSON(raw []byte, value any) error {
 	d := json.NewDecoder(bytes.NewReader(raw))
@@ -223,4 +236,50 @@ func strictJSON(raw []byte, value any) error {
 		return errors.New("trailing JSON")
 	}
 	return nil
+}
+
+// VerifyPackaged reports build compatibility only from exact packaged evidence.
+// Legacy source-check evidence remains readable via Verify, but cannot turn a
+// released build green in a project roster.
+func VerifyPackaged(raw []byte, artifact, platform string, evidence []Evidence, keys map[string]Verifier) Result {
+	selected := []Evidence{}
+	for _, e := range evidence {
+		var c Context
+		if strictJSON(e.Context, &c) == nil && c.Schema == PackagedContextSchema && c.Platform == platform {
+			selected = append(selected, e)
+		}
+	}
+	result := Verify(raw, artifact, selected, keys)
+	if len(selected) == 0 && result.Reason != "invalid_definition" {
+		result.State = "unverified"
+		result.Reason = "packaged_conformance_missing"
+	}
+	return result
+}
+
+// VerifyDeployment requires packaged evidence for the configured interface and
+// platform of this exact immutable image. Historical source checks cannot pass.
+func VerifyDeployment(raw []byte, artifact, platform, iface string, evidence []Evidence, keys map[string]Verifier) Result {
+	selected := []Evidence{}
+	for _, e := range evidence {
+		var c Context
+		if strictJSON(e.Context, &c) == nil && c.Schema == PackagedContextSchema && c.Platform == platform && (c.Check == "descriptor" || (c.Check == "interface" && c.InterfaceID == iface)) {
+			selected = append(selected, e)
+		}
+	}
+	result := Verify(raw, artifact, selected, keys)
+	matched := false
+	for _, check := range result.Checks {
+		if check.Check == "interface" && check.InterfaceID == iface && check.Status == "succeeded" {
+			matched = true
+		}
+	}
+	if result.Reason == "invalid_definition" {
+		return result
+	}
+	if len(selected) == 0 || iface == "" || !matched {
+		result.State = "unverified"
+		result.Reason = "packaged_conformance_missing"
+	}
+	return result
 }
