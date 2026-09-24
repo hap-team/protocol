@@ -1,0 +1,15 @@
+schema: local-ci/v1
+source: auto
+executors:
+  local:
+    driver: apple-container
+    allowed_drivers: [apple-container, docker]
+plugins:
+  local: {executable: runner-plugin-local}
+  oci: {executable: runner-plugin-oci}
+connections:
+  home-registry:
+    driver: registry-docker
+    registry: hifi-k3s.tailfb98c6.ts.net/hifi
+concurrency: {max: 2, on_battery: 1}
+store: {path: auto}
