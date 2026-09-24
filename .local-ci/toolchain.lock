@@ -1,65 +1,65 @@
 schema: local-ci-toolchain-lock/v2
 runner:
     repository: hap-team/runner
-    version: v0.8.41
-    commit: 3526b0a181fc5bdab400ca4454cdbdfd355a86ce
+    version: v0.8.42
+    commit: 6d63893b872b1accf1f2ff8c7a5135932cd3cde3
     protocol: local-ci/v1
     artifacts:
         darwin-arm64:
-            file: runner_v0.8.41_darwin_arm64
-            sha256: 8080adc7bfe6fd1cc61e6fa2a86ad70388ece23b792880d933ee8d72014c0111
+            file: runner_v0.8.42_darwin_arm64
+            sha256: 8f8994239832362e012850a49e903812fd6bacd8da7155472c8ed45b6d6693fe
         linux-amd64:
-            file: runner_v0.8.41_linux_amd64
-            sha256: bed714cf34b8d5ab6ac280d6aeb438e817c98520769f91440f924274008e8eab
+            file: runner_v0.8.42_linux_amd64
+            sha256: b6877b52e4298572059d405eb0b446fb54ca267c1d9427c5ed6ebc3562fc682d
         linux-arm64:
-            file: runner_v0.8.41_linux_arm64
-            sha256: 2e2342fd56e49be9041db4be794c4309919f2ad3821c78da95dc183fc3fec869
+            file: runner_v0.8.42_linux_arm64
+            sha256: 3d9aef8027f7f8f37e9485f55a16b9c8a2a496d70b8a75c1839a041ebc6c6c3e
 plugins:
     kubernetes:
         repository: hap-team/runner
-        version: v0.8.41
-        commit: 3526b0a181fc5bdab400ca4454cdbdfd355a86ce
+        version: v0.8.42
+        commit: 6d63893b872b1accf1f2ff8c7a5135932cd3cde3
         protocol: runner-plugin/v1
         artifacts:
             darwin-arm64:
-                file: runner-plugin-kubernetes_v0.8.41_darwin_arm64
-                sha256: 6dc4fefb02ce95173510b9930bac4830273edb899db20e1d9f3fc747ddce61b3
+                file: runner-plugin-kubernetes_v0.8.42_darwin_arm64
+                sha256: ab9bd78c6f34e2df5fafee97e1d7aa0b4a840ffdee63ce8153054a8ebe80a129
             linux-amd64:
-                file: runner-plugin-kubernetes_v0.8.41_linux_amd64
-                sha256: 7567272d9f816010be1dcf0539e824630366f0220874b9f294975d1065a956e3
+                file: runner-plugin-kubernetes_v0.8.42_linux_amd64
+                sha256: a1c5486b479049a163d8fb02e322f7ec39c6e69862ffe2a9f9172b3c28da01be
             linux-arm64:
-                file: runner-plugin-kubernetes_v0.8.41_linux_arm64
-                sha256: 895f7c5b726c637c69bca1f453e8e1516ad7c3f8325ba099fac29fb25eeba9d9
+                file: runner-plugin-kubernetes_v0.8.42_linux_arm64
+                sha256: a5b4f4f000e41299397b02caea71452f6c0e24db02602f8a9b991fab8eecac0d
     local:
         repository: hap-team/runner
-        version: v0.8.41
-        commit: 3526b0a181fc5bdab400ca4454cdbdfd355a86ce
+        version: v0.8.42
+        commit: 6d63893b872b1accf1f2ff8c7a5135932cd3cde3
         protocol: runner-plugin/v1
         artifacts:
             darwin-arm64:
-                file: runner-plugin-local_v0.8.41_darwin_arm64
-                sha256: 9408c755bb4589ebd05fd098b8d3745b6584ed294308526716b56dd9fa5d9748
+                file: runner-plugin-local_v0.8.42_darwin_arm64
+                sha256: e7dbf07096d9297a4aa01fcc454b57383de3a25ba1477e91667878aa563069ba
             linux-amd64:
-                file: runner-plugin-local_v0.8.41_linux_amd64
-                sha256: 72dba68f540e9cb5c7b2426fe9a088c6824ad9f1b513f7ae997e35a8dbb457a3
+                file: runner-plugin-local_v0.8.42_linux_amd64
+                sha256: b60f7e17f67921d961bca249924294408a24b57bfd9fe2c8f72f65b07af430a3
             linux-arm64:
-                file: runner-plugin-local_v0.8.41_linux_arm64
-                sha256: 5eaada4d386867a4b93162095f163482b5cf3623d90e4414dd060d0579c051eb
+                file: runner-plugin-local_v0.8.42_linux_arm64
+                sha256: e38759cf7aec2566a7ce54569e854f004c1bb4381d8f6755bc317c76e2558814
     oci:
         repository: hap-team/runner
-        version: v0.8.41
-        commit: 3526b0a181fc5bdab400ca4454cdbdfd355a86ce
+        version: v0.8.42
+        commit: 6d63893b872b1accf1f2ff8c7a5135932cd3cde3
         protocol: runner-plugin/v1
         artifacts:
             darwin-arm64:
-                file: runner-plugin-oci_v0.8.41_darwin_arm64
-                sha256: 4ee3cec0818df23623290aaaa6227af60af446eba89f6f92cc1b562c52ac2e4b
+                file: runner-plugin-oci_v0.8.42_darwin_arm64
+                sha256: ce5247dd23cb25850690ee1ce2d996e7f07190e0204916fd2a3f2e1560f3d204
             linux-amd64:
-                file: runner-plugin-oci_v0.8.41_linux_amd64
-                sha256: 232867e5bb65801240719b1bc9b4582c7c483c8d8a9cdd0d77cc7c00f4e35b7a
+                file: runner-plugin-oci_v0.8.42_linux_amd64
+                sha256: 8525acd3416a1090ee032a776187402890a2824883d2f271d131d66f6c902515
             linux-arm64:
-                file: runner-plugin-oci_v0.8.41_linux_arm64
-                sha256: 4befc463f6bba8a40fea2dfedcbce600c7690179166eb789c13e17c2d9dfb86d
+                file: runner-plugin-oci_v0.8.42_linux_arm64
+                sha256: 865d0eecb71ea695482b3c89f5f554951e8ede170b8e736cfae291174b2e16ea
 profiles:
     go:
         versions:
