@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.1
+
+- Bind signed compatibility to the tested OCI image, verifier, platform and
+  conformance scenario, with detached deployment evidence.
+- Publish immutable, checksum-pinned conformance checker binaries alongside
+  versioned schemas and the Go module.
+- Require candidate consumer and packaged-agent acceptance before the stable
+  release, and resolve receipt dependencies from their published module.
+
 ## 0.2.0-rc.2
 
 - Run interface conformance against the agent command or endpoint declared in

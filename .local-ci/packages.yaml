@@ -1,0 +1,80 @@
+schema: local-ci/v1
+service: packages
+default: prepare-candidate
+runtime: {image: 'golang:1.26.3-bookworm', platform: linux/arm64, workdir: .}
+jobs:
+  prepare-candidate:
+    executor: local
+    uses: local/command@v1
+    with:
+      executable: scripts/packages.py
+      working_directory: .
+      arguments: '["prepare","v0.2.1-rc.1"]'
+      environment: '{"GOPRIVATE":"github.com/hap-team/*","GOWORK":"off","GIT_TERMINAL_PROMPT":"0"}'
+      secret_env: '{}'
+      mutation: 'false'
+      artifact_output: package
+  publish-candidate:
+    executor: local
+    needs: [prepare-candidate]
+    inputs: {artifact: 'prepare-candidate:artifact'}
+    uses: local/command@v1
+    with:
+      executable: scripts/packages.py
+      working_directory: .
+      arguments: '["publish","v0.2.1-rc.1"]'
+      environment: '{"GOPRIVATE":"github.com/hap-team/*","GOWORK":"off","GIT_TERMINAL_PROMPT":"0"}'
+      secret_env: '{}'
+      mutation: 'true'
+  reconcile-candidate:
+    executor: local
+    uses: local/command@v1
+    with:
+      executable: scripts/packages.py
+      working_directory: .
+      arguments: '["reconcile","v0.2.1-rc.1"]'
+      environment: '{"GOPRIVATE":"github.com/hap-team/*","GOWORK":"off","GIT_TERMINAL_PROMPT":"0"}'
+      secret_env: '{}'
+      mutation: 'false'
+      artifact_output: publication
+  prepare-stable:
+    executor: local
+    uses: local/command@v1
+    with:
+      executable: scripts/packages.py
+      working_directory: .
+      arguments: '["prepare","v0.2.1"]'
+      environment: '{"GOPRIVATE":"github.com/hap-team/*","GOWORK":"off","GIT_TERMINAL_PROMPT":"0"}'
+      secret_env: '{}'
+      mutation: 'false'
+      artifact_output: package
+  publish-stable:
+    executor: local
+    needs: [prepare-stable]
+    inputs: {artifact: 'prepare-stable:artifact'}
+    uses: local/command@v1
+    with:
+      executable: scripts/packages.py
+      working_directory: .
+      arguments: '["publish","v0.2.1"]'
+      environment: '{"GOPRIVATE":"github.com/hap-team/*","GOWORK":"off","GIT_TERMINAL_PROMPT":"0"}'
+      secret_env: '{}'
+      mutation: 'true'
+  reconcile-stable:
+    executor: local
+    uses: local/command@v1
+    with:
+      executable: scripts/packages.py
+      working_directory: .
+      arguments: '["reconcile","v0.2.1"]'
+      environment: '{"GOPRIVATE":"github.com/hap-team/*","GOWORK":"off","GIT_TERMINAL_PROMPT":"0"}'
+      secret_env: '{}'
+      mutation: 'false'
+      artifact_output: publication
+entrypoints:
+  prepare-candidate: [prepare-candidate]
+  publish-candidate: [publish-candidate]
+  reconcile-candidate: [reconcile-candidate]
+  prepare-stable: [prepare-stable]
+  publish-stable: [publish-stable]
+  reconcile-stable: [reconcile-stable]
