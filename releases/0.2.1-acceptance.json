@@ -1,0 +1,194 @@
+{
+  "schema": "hap-protocol-release-acceptance/v1",
+  "candidateCommit": "8775022566818876448da7f37b598f6c532f7bc2",
+  "candidateManifestDigest": "sha256:738185260bcee05da4d68a44016ef5647ba5f3401fd7557da39dabf8b4d248e2",
+  "checks": {
+    "sdk-go": {
+      "status": "passed",
+      "evidenceDigest": "sha256:3e6133c8ee932ce8e56711e123b152a86114980ef4c991bf9a17d976e9d2d8c4",
+      "evidence": {
+        "status": "passed",
+        "sourceCommit": "1eda948dd72e3136d47fe34c7c5957e379648a5c",
+        "interfaces": [
+          "PASS process (process)",
+          "PASS http (http)",
+          "PASS websocket (websocket)",
+          "PASS a2a (a2a)"
+        ],
+        "fixtureDigest": "sha256:b54ce51df9141157bef33320ad1633be7170047f41b873f7dd4d2caa2baa367f",
+        "checkerDigest": "sha256:3f23bbd715176e34bb3ef622062749de16aa0efc215feb12d04c2d94ca3f8c01"
+      }
+    },
+    "reference-interfaces": {
+      "status": "passed",
+      "evidenceDigest": "sha256:1901f0547b1b657a043a190eed19c9b573257a393d4b21ebff6844dc09b94fe6",
+      "evidence": {
+        "status": "passed",
+        "sourceCommit": "8775022566818876448da7f37b598f6c532f7bc2",
+        "interfaces": [
+          "PASS process (process)",
+          "PASS http (http)",
+          "PASS websocket (websocket)",
+          "PASS a2a (a2a)"
+        ],
+        "checkerDigest": "sha256:3f23bbd715176e34bb3ef622062749de16aa0efc215feb12d04c2d94ca3f8c01"
+      }
+    },
+    "cli": {
+      "status": "passed",
+      "evidenceDigest": "sha256:1161c49248021fc024a1b0660efde33bf27c3b4d85e45c1d60ea7659b737b8ed",
+      "evidence": {
+        "status": "passed",
+        "sourceCommit": "ad88a384a294795565815939b1a5bfe1a5bcdda0",
+        "candidateDescriptorsValidated": 3,
+        "binaryDigest": "sha256:78ede4a70ab72df2dc97c48971105bbc2ef7899d2301ad66901d0ce575103800"
+      }
+    },
+    "marketplace-schemas": {
+      "status": "passed",
+      "evidenceDigest": "sha256:710a5901a8d09d9f8f4ca1055f0ac3c705b6310ab72125af88aff05fbf9fb051",
+      "evidence": {
+        "status": "passed",
+        "files": {
+          "cancel.schema.json": "sha256:a1c1f66c0c04d8a51a4d953dfe16dfefb8a91f1badb2b2406da2ebf7bc0d78a4",
+          "common.schema.json": "sha256:eaa94407d72566c3f8c48f534b7a24b1e84d37f40d50f475055150b1eba5bc31",
+          "conformance-context.schema.json": "sha256:9ebdca7de834cf27278bc3945ed20905f61f3ba71fc3ed1594a074dba74e0960",
+          "event.schema.json": "sha256:20a13bdb9e65900142e98b4d12fd62de1c53da441e95361790396178f88c9c24",
+          "handshake.schema.json": "sha256:3423e89dba35850f029292572740dd046fa071927487d41060411fe6ca0577fc",
+          "hap-agent.schema.json": "sha256:5ffdac795bd9638886a327e81e5e53464b84b0f975d54e9087acf94e61796421",
+          "message.schema.json": "sha256:0d247a4db339a91f979c66f71c4af8cff7b09d76904d2327a7c56fccca10c439",
+          "result.schema.json": "sha256:32cfa4cfc9a117cd55e609d7d541eed1551d6aedac1b71eb11d27bb6dca27022",
+          "task.schema.json": "sha256:ea211d197de2cf5319f43ad2224b02c6984fb7b4641bb8634ae09bd3e98faab1"
+        },
+        "releasePinDigest": "sha256:42328d6cfdf05d99e6be0ff0f13e8bf6362e2ac1e76201a16fcbec2ef9c5db6d"
+      }
+    },
+    "website-schemas": {
+      "status": "passed",
+      "evidenceDigest": "sha256:710a5901a8d09d9f8f4ca1055f0ac3c705b6310ab72125af88aff05fbf9fb051",
+      "evidence": {
+        "status": "passed",
+        "files": {
+          "cancel.schema.json": "sha256:a1c1f66c0c04d8a51a4d953dfe16dfefb8a91f1badb2b2406da2ebf7bc0d78a4",
+          "common.schema.json": "sha256:eaa94407d72566c3f8c48f534b7a24b1e84d37f40d50f475055150b1eba5bc31",
+          "conformance-context.schema.json": "sha256:9ebdca7de834cf27278bc3945ed20905f61f3ba71fc3ed1594a074dba74e0960",
+          "event.schema.json": "sha256:20a13bdb9e65900142e98b4d12fd62de1c53da441e95361790396178f88c9c24",
+          "handshake.schema.json": "sha256:3423e89dba35850f029292572740dd046fa071927487d41060411fe6ca0577fc",
+          "hap-agent.schema.json": "sha256:5ffdac795bd9638886a327e81e5e53464b84b0f975d54e9087acf94e61796421",
+          "message.schema.json": "sha256:0d247a4db339a91f979c66f71c4af8cff7b09d76904d2327a7c56fccca10c439",
+          "result.schema.json": "sha256:32cfa4cfc9a117cd55e609d7d541eed1551d6aedac1b71eb11d27bb6dca27022",
+          "task.schema.json": "sha256:ea211d197de2cf5319f43ad2224b02c6984fb7b4641bb8634ae09bd3e98faab1"
+        },
+        "releasePinDigest": "sha256:42328d6cfdf05d99e6be0ff0f13e8bf6362e2ac1e76201a16fcbec2ef9c5db6d"
+      }
+    },
+    "writer-image": {
+      "status": "passed",
+      "evidenceDigest": "sha256:698b44f8a18be6762c6f6f7055691af766f62973cf27bc46cca6a9564fd3ddef",
+      "evidence": {
+        "runId": "001a0d2f94ee7-4ee1c612133197e701842f8d",
+        "receiptDigest": "sha256:40ba89a2d63261e3f2309206e1c71de7eda3a3903ee15798247f663881e108e9",
+        "imageDigest": "sha256:b25544416c69c75c1d2cfbf9fbd3d5d9390d9d11456880c7de81e5980316a1c3",
+        "platform": "linux/amd64",
+        "verifierDigest": "sha256:1e8da7edd4b9aa2f3297c52e8f25c1a9c5e8ff110a2d42e5794e9f14826d3e10",
+        "scenarioDigest": "sha256:72672a365c273395813e72016b273a768d5220f74c4e4f6a724ebe0c3788aa6f",
+        "verificationArtifactDigest": "sha256:e2dfd67f5ee3095349f06f146571e42b32b8006567037e714657abc5758dc6b9",
+        "signedArtifactDigest": "sha256:b1560d5a431dc2ea84971026114643470e15d44661c51e28e9a84bbf598ae7f3",
+        "signedEvidenceDigest": "sha256:b3d78489db6896a7c83f5a46a81302c62bd16d7c570fd53a6763aeff8fdac3a5",
+        "checks": {
+          "cancellation": "passed",
+          "deadline": "passed",
+          "descriptor": "passed",
+          "duplicate_task": "passed",
+          "handshake": "passed",
+          "ordered_events": "passed",
+          "result_schema": "passed"
+        },
+        "runnerVersion": "v0.8.43",
+        "runnerCommit": "c23aca7924c6c0e355cab1675698865e9be3801e",
+        "gateArtifactDigest": "sha256:858c4b3ea66568352c2bdea81ba4b7e60c7f33ba674f1d4d63319977301b2fec"
+      }
+    },
+    "research-image": {
+      "status": "passed",
+      "evidenceDigest": "sha256:9300040181e75537740dcd5a121e18a7975297b2c74dd3c5e13a01140a54ed4e",
+      "evidence": {
+        "runId": "001a0d3000039-366ef7ba457cce8e5b169af5",
+        "receiptDigest": "sha256:cb84023d83e25172eb09c699f38a27e7468ee1ade024973457fa96f6508a7232",
+        "imageDigest": "sha256:ca96c7fb695fad41accb53d2c5f84ccd22ce0442a7d93d5c0c5c2cebe97a387e",
+        "platform": "linux/amd64",
+        "verifierDigest": "sha256:1e8da7edd4b9aa2f3297c52e8f25c1a9c5e8ff110a2d42e5794e9f14826d3e10",
+        "scenarioDigest": "sha256:5b5b9f03306625e07cb80d688fa17fbf656bccf04ba02e01c72f08a20e252ae3",
+        "verificationArtifactDigest": "sha256:3c5b90be131a4bb388cf33713dc2d15d44415f201b2e4417103748a993e31ea1",
+        "signedArtifactDigest": "sha256:a0c1f7396c8c1a79115ed68035ec057cf8a49969d0a289ccb07ebd72d68bc0bd",
+        "signedEvidenceDigest": "sha256:bae9e39e954669439cb5822789e94295ca027ce1eb85638dcfa72613147035d8",
+        "checks": {
+          "cancellation": "passed",
+          "deadline": "passed",
+          "descriptor": "passed",
+          "duplicate_task": "passed",
+          "handshake": "passed",
+          "ordered_events": "passed",
+          "result_schema": "passed"
+        },
+        "runnerVersion": "v0.8.43",
+        "runnerCommit": "c23aca7924c6c0e355cab1675698865e9be3801e",
+        "gateArtifactDigest": "sha256:ee41ad82c5596f0e87a3244400a63c576955767d1faf1673abcc84dac9120174"
+      }
+    },
+    "image-image": {
+      "status": "passed",
+      "evidenceDigest": "sha256:4d3d73a97bf336e7ed0c9036138278b8cd2988a8a04cf1a7af473739fc026150",
+      "evidence": {
+        "runId": "001a0d300988d-ee959d36111659fc8f504717",
+        "receiptDigest": "sha256:d86048d0b20dcec3452b47947326d39c9c3dd37751f661da253cc813133952a1",
+        "imageDigest": "sha256:f4fddd3fd9cb6134576ba9603b264b4d923e53fd8ed84d11f46194625d43d8b6",
+        "platform": "linux/amd64",
+        "verifierDigest": "sha256:1e8da7edd4b9aa2f3297c52e8f25c1a9c5e8ff110a2d42e5794e9f14826d3e10",
+        "scenarioDigest": "sha256:b404b10dfb0b3e5f5d8261a9e334b1940e9517d9655d8b02e6812e2328eac78b",
+        "verificationArtifactDigest": "sha256:18ce5f1c68211f83d76c49063db9893f2504471040b8792c58e1350f54a7dd9a",
+        "signedArtifactDigest": "sha256:aeba9f68806aa2a20d4d814c25e0292d98a4ec266c6662dc6a98fa1c67f4d524",
+        "signedEvidenceDigest": "sha256:4e6dd6758b7b92d403684f5963d2c47f9078e64ba8f30ab9f2e643d57a45b31b",
+        "checks": {
+          "cancellation": "passed",
+          "deadline": "passed",
+          "descriptor": "passed",
+          "duplicate_task": "passed",
+          "handshake": "passed",
+          "ordered_events": "passed",
+          "result_schema": "passed"
+        },
+        "runnerVersion": "v0.8.43",
+        "runnerCommit": "c23aca7924c6c0e355cab1675698865e9be3801e",
+        "gateArtifactDigest": "sha256:7b1cca44def18f9658781bfba5c2cae8eeb90a73b083d2e57790f1bad8666b1e"
+      }
+    },
+    "product-image": {
+      "status": "passed",
+      "evidenceDigest": "sha256:418f6436c0d16fcd74384302cc71274e0243b4792cf060a428d897fe8510f344",
+      "evidence": {
+        "runId": "001a0d2fca343-a6595859b78a355f89a7900c",
+        "receiptDigest": "sha256:14131b5366a09f846118e28c95dc70f24c75a3b8c85318065b81dfbcb0689014",
+        "imageDigest": "sha256:b0ff64351094d22ec164e392426f74eea6ec467fc0a0d9e8d11be5a104a7a683",
+        "platform": "linux/amd64",
+        "verifierDigest": "sha256:1e8da7edd4b9aa2f3297c52e8f25c1a9c5e8ff110a2d42e5794e9f14826d3e10",
+        "scenarioDigest": "sha256:4daf311dd3ceec82c5064439e91a8bab627540f609f80cb9b9e4328a457f088e",
+        "verificationArtifactDigest": "sha256:717abff361c898327ca263c69e38d2dae7f5d6e379ee051663f4e9ab8c99f413",
+        "signedArtifactDigest": "sha256:3c084a96a076422a86366ffc8517346312aeda811bd76a58a4b8670ad8ba97e2",
+        "signedEvidenceDigest": "sha256:ceae14d424c3f5a6f2ce6c7db26598f8e3e61401450d86f690c24dcd3af46eb2",
+        "checks": {
+          "cancellation": "passed",
+          "deadline": "passed",
+          "descriptor": "passed",
+          "duplicate_task": "passed",
+          "handshake": "passed",
+          "ordered_events": "passed",
+          "result_schema": "passed"
+        },
+        "runnerVersion": "v0.8.43",
+        "runnerCommit": "c23aca7924c6c0e355cab1675698865e9be3801e",
+        "gateArtifactDigest": "sha256:1520b9f5b337c82288929bbf0bc900a0ccc4c64c3363ff7d4e37fed16109abbd"
+      }
+    }
+  }
+}
